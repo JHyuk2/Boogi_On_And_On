@@ -7,6 +7,8 @@ const GEMINI_MODELS: Array[String] = [
 	"gemini-2.5-flash",
 ]
 const API_KEY_PATH := "res://API_KEY.txt"
+const CHAT_SAVE_PATH := "user://boogi_chat_save.json"
+const WELCOME_MESSAGE := "안녕! 나는 부기야. 오늘의 목표를 적고 물장구를 쳐 봐! 🐢"
 const LOADING_REPLY_TEXT := "부기가 열심히 고민하고 있어요... 🐢 뽀글뽀글..."
 const SYSTEM_PROMPT := (
 	"너는 다정하고 느긋한 바다거북이 '부기'야. "
@@ -42,6 +44,7 @@ var _pending_retry_count: int = 0
 
 func _ready() -> void:
 	set_anchors_preset(PRESET_FULL_RECT)
+	load_chat_data()
 
 	_http_request = HTTPRequest.new()
 	add_child(_http_request)
@@ -53,7 +56,7 @@ func _ready() -> void:
 	add_child(_retry_timer)
 
 	setup_ui()
-	add_chat_bubble("안녕! 나는 부기야. 오늘의 목표를 적고 물장구를 쳐 봐! 🐢", false)
+	restore_chat_bubbles()
 	print("부기야 안녕! 드디어 첫 물장구를 쳤어!")
 
 
@@ -153,9 +156,97 @@ func _build_request_contents(user_text: String) -> Array:
 	return contents
 
 
+func _extract_turn_text(turn: Variant) -> String:
+	if not turn is Dictionary:
+		return ""
+
+	var parts: Variant = turn.get("parts", [])
+	if not parts is Array or parts.is_empty():
+		return ""
+
+	var first_part: Variant = parts[0]
+	if not first_part is Dictionary:
+		return ""
+
+	return str(first_part.get("text", "")).strip_edges()
+
+
+func _is_valid_turn(turn: Variant) -> bool:
+	if not turn is Dictionary:
+		return false
+
+	var role := str(turn.get("role", ""))
+	if role != "user" and role != "model":
+		return false
+
+	return not _extract_turn_text(turn).is_empty()
+
+
+func save_chat_data() -> void:
+	var json_text := JSON.stringify(conversation_history)
+	var file := FileAccess.open(CHAT_SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning(
+			"대화 저장 실패 (%s): %s"
+			% [CHAT_SAVE_PATH, error_string(FileAccess.get_open_error())]
+		)
+		return
+
+	file.store_string(json_text)
+
+
+func load_chat_data() -> void:
+	conversation_history.clear()
+
+	if not FileAccess.file_exists(CHAT_SAVE_PATH):
+		return
+
+	var file := FileAccess.open(CHAT_SAVE_PATH, FileAccess.READ)
+	if file == null:
+		push_warning(
+			"대화 불러오기 실패 (%s): %s"
+			% [CHAT_SAVE_PATH, error_string(FileAccess.get_open_error())]
+		)
+		return
+
+	var json := JSON.new()
+	var parse_err := json.parse(file.get_as_text())
+	if parse_err != OK:
+		push_warning("저장된 대화 JSON 파싱 실패. 새 대화로 시작합니다.")
+		return
+
+	if not json.data is Array:
+		push_warning("저장된 대화 형식이 올바르지 않습니다. 새 대화로 시작합니다.")
+		return
+
+	var restored: Array = []
+	for turn in json.data:
+		if _is_valid_turn(turn):
+			restored.append(turn)
+
+	conversation_history.assign(restored)
+
+
+func restore_chat_bubbles() -> void:
+	if conversation_history.is_empty():
+		add_chat_bubble(WELCOME_MESSAGE, false)
+		return
+
+	for turn in conversation_history:
+		var text := _extract_turn_text(turn)
+		if text.is_empty():
+			continue
+
+		var role := str(turn.get("role", ""))
+		add_chat_bubble(text, role == "user", false)
+
+	call_deferred("_scroll_chat_to_bottom")
+
+
 func _append_conversation_turn(user_text: String, model_text: String) -> void:
 	conversation_history.append(_make_user_turn(user_text))
 	conversation_history.append(_make_model_turn(model_text))
+	save_chat_data()
 
 
 func _create_bubble_style(is_user: bool) -> StyleBoxFlat:
@@ -194,9 +285,10 @@ func _create_bubble_row(text: String, is_user: bool) -> HBoxContainer:
 	return row
 
 
-func add_chat_bubble(text: String, is_user: bool) -> void:
+func add_chat_bubble(text: String, is_user: bool, auto_scroll: bool = true) -> void:
 	chat_log.add_child(_create_bubble_row(text, is_user))
-	call_deferred("_scroll_chat_to_bottom")
+	if auto_scroll:
+		call_deferred("_scroll_chat_to_bottom")
 
 
 func _scroll_chat_to_bottom() -> void:
