@@ -302,7 +302,27 @@ class _PledgeScreenState extends ConsumerState<PledgeScreen> with SingleTickerPr
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Center(child: cardContent),
+              child: Column(
+                children: [
+                  // 뒤로가기 버튼
+                  if (!_isSuccessTriggered)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                        tooltip: '뒤로가기',
+                      ),
+                    ),
+                  Expanded(
+                    child: Center(child: cardContent),
+                  ),
+                ],
+              ),
             ),
           ),
 

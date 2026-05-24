@@ -9,25 +9,12 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _turtleController;
-  late Animation<double> _turtleAnimation;
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _turtleController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    );
-
-    _turtleAnimation = Tween<double>(begin: -1.2, end: 1.2).animate(
-      CurvedAnimation(parent: _turtleController, curve: Curves.easeInOutCubic),
-    );
-
-    // 거북이 애니메이션을 시작하고, 끝나면 온보딩 대화창으로 전환합니다.
-    _turtleController.forward().then((_) {
+    // 3초 후 온보딩 대화 화면으로 자동 전환
+    Future.delayed(const Duration(seconds: 3), () {
       _navigateToOnboarding();
     });
   }
@@ -47,12 +34,6 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 1000),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _turtleController.dispose();
-    super.dispose();
   }
 
   @override
@@ -98,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen>
               );
             }),
 
-            // 중앙 로고 & 거북이 수영 영역
+            // 중앙 로고 & 부기 아이콘 + 로딩 인디케이터
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -122,73 +103,77 @@ class _SplashScreenState extends State<SplashScreen>
                   )
                       .animate()
                       .fade(duration: 800.ms, curve: Curves.easeOut)
-                      .scale(
-                          delay: 100.ms,
-                          duration: 800.ms,
-                          curve: Curves.easeOutBack),
+                      .scale(delay: 100.ms, duration: 800.ms, curve: Curves.easeOutBack),
                   const SizedBox(height: 12.0),
-                  const Text(
+                  Text(
                     '완벽하지 않아도 괜찮은 바다',
                     style: TextStyle(
                       fontSize: 15.0,
-                      color: Color(0xFF4A7D82),
+                      color: const Color(0xFF4A7D82),
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1.2,
                     ),
-                  ).animate().fade(delay: 500.ms, duration: 800.ms),
-                  const SizedBox(height: 80.0),
+                  )
+                      .animate()
+                      .fade(delay: 500.ms, duration: 800.ms),
+                  const SizedBox(height: 60.0),
 
-                  // 거북이가 지나가는 수영선 레인
-                  ClipRect(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 100,
-                      child: AnimatedBuilder(
-                        animation: _turtleAnimation,
-                        builder: (context, child) {
-                          return FractionalTranslation(
-                            translation: Offset(_turtleAnimation.value, 0.0),
-                            child: child,
-                          );
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF4FA095),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  '🐢',
-                                  style: TextStyle(fontSize: 32),
-                                ),
-                              ),
+                  // 부기 아이콘 (가만히 고정) + 원형 로딩 인디케이터
+                  SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // 빙글빙글 도는 원형 로딩
+                        SizedBox(
+                          width: 96,
+                          height: 96,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3.0,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              const Color(0xFF4FA095).withValues(alpha: 0.6),
                             ),
-                            const SizedBox(height: 6.0),
-                            const Text(
-                              '느릿느릿...',
-                              style: TextStyle(
-                                color: Color(0xFF1E5257),
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        // 가운데 고정된 부기 아이콘
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4FA095).withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '🐢',
+                              style: TextStyle(fontSize: 32),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  )
+                      .animate()
+                      .fade(delay: 300.ms, duration: 600.ms)
+                      .scale(
+                        delay: 300.ms,
+                        begin: const Offset(0.8, 0.8),
+                        end: const Offset(1.0, 1.0),
+                        duration: 600.ms,
+                        curve: Curves.easeOutBack,
+                      ),
+                  const SizedBox(height: 16.0),
+                  const Text(
+                    '느릿느릿...',
+                    style: TextStyle(
+                      color: Color(0xFF1E5257),
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                      .animate()
+                      .fade(delay: 600.ms, duration: 600.ms),
                 ],
               ),
             ),
