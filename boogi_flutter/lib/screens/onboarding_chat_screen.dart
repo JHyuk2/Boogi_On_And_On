@@ -9,7 +9,8 @@ class OnboardingChatScreen extends ConsumerStatefulWidget {
   const OnboardingChatScreen({super.key});
 
   @override
-  ConsumerState<OnboardingChatScreen> createState() => _OnboardingChatScreenState();
+  ConsumerState<OnboardingChatScreen> createState() =>
+      _OnboardingChatScreenState();
 }
 
 class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
@@ -20,10 +21,10 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
   bool _showNextButton = false;
 
   final List<String> _statusChoices = [
-    "🎒 학교와 시험의 바다를 지나는 학생",
-    "🏢 매일 영혼이 갈려나가는 직장인",
-    "⛵ 새로운 출발을 준비하며 막막한 상태",
-    "🌧️ 요즘 많이 지치고 번아웃이 온 것 같아"
+    "🎒 나만의 속도로 묵묵히 공부하고 있는 학생",
+    "🏢 바쁘게 굴러가는 일상 속 직장인",
+    "⛵ 새로운 변화와 출발을 맞이하고 있는 상태",
+    "🌧️ 잠시 숨을 고르며 쉬어가고 싶은 시기"
   ];
 
   @override
@@ -74,7 +75,8 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
     if (!mounted) return;
     setState(() {
       _messages.add({
-        'text': "그렇구나. 많이 힘들고 지쳤을 텐데 여기까지 잘 찾아왔어.\n완벽하지 않아도 괜찮아. 내가 언제나 이 바다에서 도와줄게!",
+        'text':
+            "그렇구나. 많이 힘들고 지쳤을 텐데 여기까지 잘 찾아왔어.\n완벽하지 않아도 괜찮아. 내가 언제나 이 바다에서 도와줄게!",
         'isMe': false,
       });
     });
@@ -127,7 +129,8 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
             children: [
               // 커스텀 앱바
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
                 child: Row(
                   children: [
                     Container(
@@ -177,7 +180,8 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D1726).withValues(alpha: 0.9), // 가상 키보드 영역
+                    color: const Color(0xFF0D1726)
+                        .withValues(alpha: 0.9), // 가상 키보드 영역
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(24.0),
                       topRight: Radius.circular(24.0),
@@ -212,7 +216,8 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                                     color: Colors.white.withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(16.0),
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.15),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.15),
                                       width: 1.0,
                                     ),
                                   ),
@@ -237,10 +242,8 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                                   ),
                                 ),
                               ),
-                            )
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .slideX(begin: 0.1, end: 0.0, curve: Curves.easeOut);
+                            ).animate().fade(duration: 400.ms).slideX(
+                                begin: 0.1, end: 0.0, curve: Curves.easeOut);
                           }).toList(),
                         ),
 
@@ -250,21 +253,24 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                           onPressed: () {
                             Navigator.of(context).push(
                               PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) =>
-                                    const PledgeScreen(),
-                                transitionsBuilder:
-                                    (context, animation, secondaryAnimation, child) {
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const PledgeScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
                                   return FadeTransition(
                                     opacity: animation,
                                     child: child,
                                   );
                                 },
-                                transitionDuration: const Duration(milliseconds: 600),
+                                transitionDuration:
+                                    const Duration(milliseconds: 600),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6DEBE1), // 활기차면서도 부드러운 청록색
+                            backgroundColor:
+                                const Color(0xFF6DEBE1), // 활기차면서도 부드러운 청록색
                             foregroundColor: const Color(0xFF0F1E36),
                             minimumSize: const Size(double.infinity, 54),
                             shape: RoundedRectangleBorder(
@@ -281,7 +287,9 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                             ),
                           ),
                         )
-                            .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                            .animate(
+                                onPlay: (controller) =>
+                                    controller.repeat(reverse: true))
                             .shimmer(duration: 1500.ms, color: Colors.white30)
                             .scale(
                               begin: const Offset(1.0, 1.0),
@@ -291,7 +299,9 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                             ),
 
                       // 초기 상태(첫 대사 출력 전) 안내 문구
-                      if (!_showChoices && !_showNextButton && _selectedChoice == null)
+                      if (!_showChoices &&
+                          !_showNextButton &&
+                          _selectedChoice == null)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: Row(
@@ -302,7 +312,8 @@ class _OnboardingChatScreenState extends ConsumerState<OnboardingChatScreen> {
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white30),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white30),
                                 ),
                               ),
                               const SizedBox(width: 12.0),

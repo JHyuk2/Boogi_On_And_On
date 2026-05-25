@@ -103,19 +103,20 @@ class _SplashScreenState extends State<SplashScreen> {
                   )
                       .animate()
                       .fade(duration: 800.ms, curve: Curves.easeOut)
-                      .scale(delay: 100.ms, duration: 800.ms, curve: Curves.easeOutBack),
+                      .scale(
+                          delay: 100.ms,
+                          duration: 800.ms,
+                          curve: Curves.easeOutBack),
                   const SizedBox(height: 12.0),
                   Text(
-                    '완벽하지 않아도 괜찮은 바다',
+                    '각자의 물결을 따라서 On&On',
                     style: TextStyle(
                       fontSize: 15.0,
                       color: const Color(0xFF4A7D82),
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1.2,
                     ),
-                  )
-                      .animate()
-                      .fade(delay: 500.ms, duration: 800.ms),
+                  ).animate().fade(delay: 500.ms, duration: 800.ms),
                   const SizedBox(height: 60.0),
 
                   // 부기 아이콘 (가만히 고정) + 원형 로딩 인디케이터
@@ -141,7 +142,8 @@ class _SplashScreenState extends State<SplashScreen> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4FA095).withValues(alpha: 0.15),
+                            color:
+                                const Color(0xFF4FA095).withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Center(
@@ -153,10 +155,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                       ],
                     ),
-                  )
-                      .animate()
-                      .fade(delay: 300.ms, duration: 600.ms)
-                      .scale(
+                  ).animate().fade(delay: 300.ms, duration: 600.ms).scale(
                         delay: 300.ms,
                         begin: const Offset(0.8, 0.8),
                         end: const Offset(1.0, 1.0),
@@ -165,15 +164,13 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                   const SizedBox(height: 16.0),
                   const Text(
-                    '느릿느릿...',
+                    '물장구 준비 중...',
                     style: TextStyle(
                       color: Color(0xFF1E5257),
                       fontSize: 11.0,
                       fontWeight: FontWeight.bold,
                     ),
-                  )
-                      .animate()
-                      .fade(delay: 600.ms, duration: 600.ms),
+                  ).animate().fade(delay: 600.ms, duration: 600.ms),
                 ],
               ),
             ),

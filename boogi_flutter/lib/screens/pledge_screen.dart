@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/onboarding_provider.dart';
 import '../widgets/signature_pad.dart';
-import 'home_screen.dart';
+import 'main_layout.dart';
 
 class PledgeScreen extends ConsumerStatefulWidget {
   const PledgeScreen({super.key});
@@ -72,7 +72,7 @@ class _PledgeScreenState extends ConsumerState<PledgeScreen> with SingleTickerPr
         Navigator.of(context).pushAndRemoveUntil(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const HomeScreen(),
+                const MainLayout(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(
                 opacity: animation,
