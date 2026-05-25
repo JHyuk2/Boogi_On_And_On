@@ -108,11 +108,11 @@ class _SplashScreenState extends State<SplashScreen> {
                           duration: 800.ms,
                           curve: Curves.easeOutBack),
                   const SizedBox(height: 12.0),
-                  Text(
+                  const Text(
                     '각자의 물결을 따라서 On&On',
                     style: TextStyle(
                       fontSize: 15.0,
-                      color: const Color(0xFF4A7D82),
+                      color: Color(0xFF4A7D82),
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1.2,
                     ),

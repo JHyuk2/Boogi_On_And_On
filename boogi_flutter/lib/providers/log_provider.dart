@@ -7,3 +7,8 @@ enum LogViewMode { seaGrass, journeyMap }
 final logViewModeProvider = StateProvider<LogViewMode>(
   (ref) => LogViewMode.seaGrass,
 );
+
+/// 현재 달력의 선택된 연월을 관리하는 Provider
+final focusedMonthProvider = StateProvider<DateTime>(
+  (ref) => DateTime(2026, 5, 25), // 시스템 기본 날짜인 2026년 5월로 초기화
+);

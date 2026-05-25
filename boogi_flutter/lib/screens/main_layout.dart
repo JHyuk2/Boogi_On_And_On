@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'home_screen.dart';
 import 'log_screen.dart';
-import 'placeholder_screen.dart';
+import 'community_screen.dart';
+import 'profile_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -43,22 +44,20 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true, // 바텀 네비게이션이 플로팅 형태이므로 바디가 끝까지 차게 확장
+      // [수정 1 / Task 1] 바디 영역에 PageView를 배치하여 좌우 스와이프 네비게이션 허용
       body: PageView(
         controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(), // 스와이프로 탭 변경 방지 (버튼 클릭만 가능)
+        physics: const BouncingScrollPhysics(), // 스마트폰 네이티브 감성의 스와이프 물리학 효과 적용
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         children: const [
           HomeScreen(),
           LogScreen(),
-          PlaceholderScreen(
-            title: '고수들의 바다',
-            description: '유리병 편지로 익명의 위로를 주고받는 따뜻한 커뮤니티 공간입니다.',
-            icon: Icons.mail_rounded,
-          ),
-          PlaceholderScreen(
-            title: '여행자 가방',
-            description: '나의 다짐 서약서와 획득한 여행 배지를 확인하는 보관함입니다.',
-            icon: Icons.backpack_rounded,
-          ),
+          CommunityScreen(),
+          ProfileScreen(),
         ],
       ),
       bottomNavigationBar: _buildCustomBottomBar(),
@@ -110,8 +109,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _currentIndex == index;
-    final activeColor = const Color(0xFF4FA095);
-    final inactiveColor = const Color(0xFF8BA6A1);
+    const activeColor = Color(0xFF4FA095);
+    const inactiveColor = Color(0xFF8BA6A1);
 
     return InkWell(
       onTap: () => _onTabTapped(index),

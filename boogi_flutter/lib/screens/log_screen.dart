@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/log_provider.dart';
 import '../models/daily_log_model.dart';
 import '../providers/daily_log_provider.dart';
+import '../providers/home_provider.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Mock Data Models & Generators
@@ -47,7 +48,7 @@ const List<_IslandData> _mockIslands = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-// 항해 일지 메인 화면
+// 항해 일지 메인 화면 (전체 세로 스크롤 레이아웃 리팩토링)
 // ─────────────────────────────────────────────────────────────
 
 class LogScreen extends ConsumerWidget {
@@ -71,34 +72,39 @@ class LogScreen extends ConsumerWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            const SizedBox(height: 20.0),
+        // [수정 1 / Task 1] 화면 전체 요소를 세로로 부드럽게 스크롤하기 위해 최상단에 SingleChildScrollView 배치
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 20.0),
 
-            // 화면 타이틀
-            const Text(
-              '항해 일지',
-              style: TextStyle(
-                color: Color(0xFF1E5257),
-                fontSize: 22.0,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
-            )
-                .animate()
-                .fade(duration: 600.ms)
-                .slideY(begin: 0.15, end: 0.0, curve: Curves.easeOutCubic),
+              // 화면 타이틀
+              const Text(
+                '항해 일지',
+                style: TextStyle(
+                  color: Color(0xFF004D40),
+                  fontSize: 22.0,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              )
+                  .animate()
+                  .fade(duration: 600.ms)
+                  .slideY(begin: 0.15, end: 0.0, curve: Curves.easeOutCubic),
 
-            const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
 
-            // ── 뷰 모드 토글 ──
-            _buildViewToggle(context, ref, viewMode),
+              // ── 뷰 모드 토글 ──
+              _buildViewToggle(context, ref, viewMode),
 
-            const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
 
-            // ── 뷰 본문 (바다 잔디 or 여정 지도) ──
-            Expanded(
-              child: AnimatedSwitcher(
+              // ── 뷰 본문 (바다 잔디 or 여정 지도) ──
+              // [수정 1] 최상단 전체 스크롤을 적용하기 위해 Expanded/AnimatedSwitcher 구조에서 Expanded 해제
+              AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
@@ -118,14 +124,14 @@ class LogScreen extends ConsumerWidget {
                     ? const _SeaGrassView(key: ValueKey('sea_grass'))
                     : const _JourneyMapView(key: ValueKey('journey_map')),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// 슬라이딩 인디케이터가 있는 감성 토글 스위치
+  /// 슬라이딩 인디케이터가 있는 감성 토글 스위치 (파스텔 민트 스타일)
   Widget _buildViewToggle(
     BuildContext context,
     WidgetRef ref,
@@ -137,10 +143,10 @@ class LogScreen extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24.0),
       height: 48.0,
       decoration: BoxDecoration(
-        color: const Color(0xFF4FA095).withValues(alpha: 0.08),
+        color: const Color(0xFF80CBC4).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+          color: const Color(0xFFB2DFDB).withValues(alpha: 0.6),
           width: 1.5,
         ),
       ),
@@ -161,7 +167,7 @@ class LogScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF1E5257).withValues(alpha: 0.08),
+                      color: const Color(0xFF004D40).withValues(alpha: 0.06),
                       blurRadius: 8.0,
                       offset: const Offset(0, 2),
                     ),
@@ -213,7 +219,7 @@ class LogScreen extends ConsumerWidget {
           duration: const Duration(milliseconds: 250),
           style: TextStyle(
             color: isActive
-                ? const Color(0xFF1E5257)
+                ? const Color(0xFF004D40)
                 : const Color(0xFF8BA6A1),
             fontSize: 14.0,
             fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
@@ -227,13 +233,18 @@ class LogScreen extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// View A: 바다 잔디 (깃허브 잔디 스타일 히트맵 캘린더)
+// View A: 바다 잔디 (진짜 캘린더 연산 ➔ 스무스 슬라이딩 제스처 적용)
 // ─────────────────────────────────────────────────────────────
 
-class _SeaGrassView extends ConsumerWidget {
+class _SeaGrassView extends ConsumerStatefulWidget {
   const _SeaGrassView({super.key});
 
-  // 수심(레벨)에 따른 바다 컬러 팔레트
+  @override
+  ConsumerState<_SeaGrassView> createState() => _SeaGrassViewState();
+}
+
+class _SeaGrassViewState extends ConsumerState<_SeaGrassView> {
+  // 수심(레벨)에 따른 바다 컬러 팔레트 (일반 일지용)
   static const _levelColors = [
     Color(0xFFE3F5F2), // level 0 — 얕은 물결
     Color(0xFFB8E5DF), // level 1 — 조용한 모래밭
@@ -241,8 +252,13 @@ class _SeaGrassView extends ConsumerWidget {
     Color(0xFF4FA095), // level 3 — 산호초 군락
   ];
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   // ── 상세 모달 바텀 시트 호출 메서드 ──
-  void _showDetailBottomSheet(BuildContext context, DailyLog item) {
+  void _showDetailBottomSheet(BuildContext context, DailyLog item, bool isToday) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -269,7 +285,7 @@ class _SeaGrassView extends ConsumerWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2F1),
+                    color: const Color(0xFFB2DFDB).withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(2.0),
                   ),
                 ),
@@ -280,9 +296,9 @@ class _SeaGrassView extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '5월 ${item.date.day}일의 항해 기록',
+                    '${item.date.month}월 ${item.date.day}일의 항해 기록',
                     style: const TextStyle(
-                      color: Color(0xFF1E5257),
+                      color: Color(0xFF004D40),
                       fontSize: 17.0,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.3,
@@ -292,18 +308,22 @@ class _SeaGrassView extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4FA095).withValues(alpha: 0.08),
+                      color: isToday 
+                          ? const Color(0xFFFF823A).withValues(alpha: 0.08)
+                          : const Color(0xFF4FA095).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12.0),
                       border: Border.all(
-                        color: const Color(0xFF4FA095).withValues(alpha: 0.2),
+                        color: isToday 
+                            ? const Color(0xFFFF823A).withValues(alpha: 0.25)
+                            : const Color(0xFF4FA095).withValues(alpha: 0.2),
                       ),
                     ),
                     child: Text(
                       item.mood,
-                      style: const TextStyle(
-                        color: Color(0xFF4FA095),
+                      style: TextStyle(
+                        color: isToday ? const Color(0xFFFF823A) : const Color(0xFF00796B),
                         fontSize: 12.0,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         fontFamily: 'Pretendard',
                       ),
                     ),
@@ -314,7 +334,7 @@ class _SeaGrassView extends ConsumerWidget {
               const SizedBox(height: 16.0),
               Divider(
                 height: 1.0,
-                color: const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+                color: const Color(0xFFB2DFDB).withValues(alpha: 0.3),
               ),
               const SizedBox(height: 20.0),
 
@@ -322,7 +342,7 @@ class _SeaGrassView extends ConsumerWidget {
               const Text(
                 '<완료한 물장구>',
                 style: TextStyle(
-                  color: Color(0xFF4FA095),
+                  color: Color(0xFFFF823A), // 비비드 코랄 강조
                   fontSize: 13.0,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.2,
@@ -356,7 +376,7 @@ class _SeaGrassView extends ConsumerWidget {
                         const Text(
                           '• ',
                           style: TextStyle(
-                            color: Color(0xFF5A7D82),
+                            color: Color(0xFFFF823A),
                             fontSize: 13.0,
                             fontWeight: FontWeight.w700,
                           ),
@@ -365,7 +385,7 @@ class _SeaGrassView extends ConsumerWidget {
                           child: Text(
                             task,
                             style: const TextStyle(
-                              color: Color(0xFF1E5257),
+                              color: Color(0xFF004D40),
                               fontSize: 13.0,
                               fontWeight: FontWeight.w600,
                               height: 1.4,
@@ -384,10 +404,10 @@ class _SeaGrassView extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4FA095).withValues(alpha: 0.05),
+                  color: const Color(0xFFB2DFDB).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16.0),
                   border: Border.all(
-                    color: const Color(0xFF4FA095).withValues(alpha: 0.12),
+                    color: const Color(0xFFB2DFDB).withValues(alpha: 0.25),
                   ),
                 ),
                 child: Row(
@@ -439,27 +459,24 @@ class _SeaGrassView extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 드래그 핸들 바
               Center(
                 child: Container(
                   width: 36,
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2F1),
+                    color: const Color(0xFFB2DFDB).withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(2.0),
                   ),
                 ),
               ),
-
-              // 상단 헤더 영역
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     '${date.month}월 ${date.day}일의 항해 기록',
                     style: const TextStyle(
-                      color: Color(0xFF1E5257),
+                      color: Color(0xFF004D40),
                       fontSize: 17.0,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.3,
@@ -469,10 +486,10 @@ class _SeaGrassView extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5A7D82).withValues(alpha: 0.08),
+                      color: const Color(0xFF8BA6A1).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12.0),
                       border: Border.all(
-                        color: const Color(0xFF5A7D82).withValues(alpha: 0.2),
+                        color: const Color(0xFF8BA6A1).withValues(alpha: 0.2),
                       ),
                     ),
                     child: const Text(
@@ -487,15 +504,12 @@ class _SeaGrassView extends ConsumerWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16.0),
               Divider(
                 height: 1.0,
-                color: const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+                color: const Color(0xFFB2DFDB).withValues(alpha: 0.3),
               ),
               const SizedBox(height: 20.0),
-
-              // 중앙 완료 목록 영역
               const Text(
                 '<완료한 물장구>',
                 style: TextStyle(
@@ -507,7 +521,6 @@ class _SeaGrassView extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12.0),
-
               Padding(
                 padding: const EdgeInsets.only(left: 4.0),
                 child: Text(
@@ -522,17 +535,14 @@ class _SeaGrassView extends ConsumerWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24.0),
-
-              // 하단 푸터 영역
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5A7D82).withValues(alpha: 0.04),
+                  color: const Color(0xFFB2DFDB).withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16.0),
                   border: Border.all(
-                    color: const Color(0xFF5A7D82).withValues(alpha: 0.1),
+                    color: const Color(0xFFB2DFDB).withValues(alpha: 0.15),
                   ),
                 ),
                 child: const Row(
@@ -563,6 +573,147 @@ class _SeaGrassView extends ConsumerWidget {
     );
   }
 
+  // ── 간소화된 연/월 선택 모달 팝업 ──
+  void _showMonthYearPickerDialog(BuildContext context, DateTime focusedMonth) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // [수정 1 / RenderFlex 오버플로우 방어] 바텀시트가 전체 높이를 확보하도록 차단 해제!
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(28.0),
+              topRight: Radius.circular(28.0),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              int selectedYear = focusedMonth.year;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24.0),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB2DFDB).withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(2.0),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    '항해할 연월 선택하기',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF004D40),
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF00796B)),
+                        onPressed: () {
+                          setState(() {
+                            selectedYear--;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '$selectedYear년',
+                        style: const TextStyle(
+                          color: Color(0xFF004D40),
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF00796B)),
+                        onPressed: () {
+                          setState(() {
+                            selectedYear++;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 10.0,
+                      crossAxisSpacing: 10.0,
+                      childAspectRatio: 1.5,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      final targetMonth = index + 1;
+                      final isCurrentMonth =
+                          focusedMonth.year == selectedYear && focusedMonth.month == targetMonth;
+
+                      return GestureDetector(
+                        onTap: () {
+                          ref.read(focusedMonthProvider.notifier).state =
+                              DateTime(selectedYear, targetMonth, 25);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isCurrentMonth
+                                ? const Color(0xFFFF823A)
+                                : const Color(0xFFB2DFDB).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(16.0),
+                            border: Border.all(
+                              color: isCurrentMonth
+                                  ? const Color(0xFFFF823A)
+                                  : const Color(0xFFB2DFDB).withValues(alpha: 0.3),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$targetMonth월',
+                              style: TextStyle(
+                                color: isCurrentMonth ? Colors.white : const Color(0xFF004D40),
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   DailyLog? _findLogForDate(List<DailyLog> logs, DateTime date) {
     try {
       return logs.firstWhere((log) =>
@@ -575,15 +726,16 @@ class _SeaGrassView extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final logsAsync = ref.watch(dailyLogProvider);
+    final focusedMonth = ref.watch(focusedMonthProvider);
 
     return logsAsync.when(
       loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 40.0),
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4FA095)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4DB6AC)),
           ),
         ),
       ),
@@ -592,28 +744,29 @@ class _SeaGrassView extends ConsumerWidget {
           padding: const EdgeInsets.all(24.0),
           child: Text(
             '오류가 발생했습니다: $err',
-            style: const TextStyle(color: Color(0xFFD87D56)),
+            style: const TextStyle(color: Color(0xFFFF823A)),
           ),
         ),
       ),
       data: (logs) {
-        // 실제 Dart DateTime을 이용한 동적 달력 생성 로직
-        // 시스템 기준 오늘 날짜는 2026-05-25이므로 2026년 5월을 기준으로 연출합니다.
-        final now = DateTime(2026, 5, 25);
-        final year = now.year;
-        final month = now.month;
-        
-        final firstDayOfMonth = DateTime(year, month, 1);
-        final totalDays = DateTime(year, month + 1, 0).day; // 해당 월의 총 일수
-        final emptySpaces = firstDayOfMonth.weekday - 1; // 월 시작 전 빈 공간 (월요일 = 1, 일요일 = 7이므로 weekday - 1)
+        // 시스템 기준 오늘 날짜 (2026-05-25)
+        final today = DateTime(2026, 5, 25);
 
         // 통계 실시간 계산
         final coralCount = logs.where((e) => e.grassType == '🪸').length;
         final starCount = logs.where((e) => e.grassType == '⭐').length;
         final waveCount = logs.where((e) => e.grassType == '~').length;
 
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+        // 달력 일자 연산
+        final pageYear = focusedMonth.year;
+        final pageMonth = focusedMonth.month;
+        
+        final firstDayOfMonth = DateTime(pageYear, pageMonth, 1);
+        final totalDays = DateTime(pageYear, pageMonth + 1, 0).day;
+        final emptySpaces = firstDayOfMonth.weekday - 1;
+
+        // [수정 1] 최상단에서 전체 세로 스크롤을 하므로 본문 바다 잔디 위젯 내부의 SingleChildScrollView는 제거하고 Padding으로 구성
+        return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,12 +779,12 @@ class _SeaGrassView extends ConsumerWidget {
                   color: Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(18.0),
                   border: Border.all(
-                    color: const Color(0xFFE0F2F1),
+                    color: const Color(0xFFB2DFDB).withValues(alpha: 0.4),
                     width: 1.0,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -648,7 +801,7 @@ class _SeaGrassView extends ConsumerWidget {
                         '$starCount마리의 불가사리가 놀러 왔고, '
                         '$waveCount번의 잔잔한 물결이 일었네.',
                         style: const TextStyle(
-                          color: Color(0xFF1E5257),
+                          color: Color(0xFF004D40),
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                           height: 1.6,
@@ -663,6 +816,67 @@ class _SeaGrassView extends ConsumerWidget {
                   .slideY(begin: 0.08, end: 0.0, curve: Curves.easeOut),
 
               const SizedBox(height: 24.0),
+
+              // ── 연월 선택 버튼 & 양옆 네비게이션 ──
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF00796B)),
+                      onPressed: () {
+                        ref.read(focusedMonthProvider.notifier).update(
+                          (date) => DateTime(date.year, date.month - 1, 1),
+                        );
+                      },
+                    ),
+                    GestureDetector(
+                      onTap: () => _showMonthYearPickerDialog(context, focusedMonth),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF823A).withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20.0),
+                          border: Border.all(
+                            color: const Color(0xFFFF823A).withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${focusedMonth.year}-${focusedMonth.month.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                color: Color(0xFFFF823A), // 선명한 비비드 코랄 강조
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.calendar_month_rounded,
+                              size: 16,
+                              color: Color(0xFFFF823A),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF00796B)),
+                      onPressed: () {
+                        ref.read(focusedMonthProvider.notifier).update(
+                          (date) => DateTime(date.year, date.month + 1, 1),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16.0),
 
               // ── 요일 헤더 ──
               Padding(
@@ -689,37 +903,93 @@ class _SeaGrassView extends ConsumerWidget {
 
               const SizedBox(height: 8.0),
 
-              // ── 히트맵 그리드 ──
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  mainAxisSpacing: 5.0,
-                  crossAxisSpacing: 5.0,
-                ),
-                itemCount: emptySpaces + totalDays,
-                itemBuilder: (context, index) {
-                  if (index < emptySpaces) {
-                    // 월의 1일 이전 빈 공간 (공백 칸)
-                    return const SizedBox.shrink();
+              // ── 히트맵 그리드 (GestureDetector를 통한 좌우 물리 드래그 방향 감지 스와이프 구현) ──
+              // [수정 2 / Task 2] PageView를 완전히 걷어내고, 달력 영역 전체를 GestureDetector로 감싸 완벽하고 매끄러운 스와이프를 보장합니다!
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity == null) return;
+                  if (details.primaryVelocity! < 0) {
+                    // 오른쪽에서 왼쪽으로 쓸기 (다음 달로 이동)
+                    ref.read(focusedMonthProvider.notifier).update(
+                      (date) => DateTime(date.year, date.month + 1, 1),
+                    );
+                  } else if (details.primaryVelocity! > 0) {
+                    // 왼쪽에서 오른쪽으로 쓸기 (이전 달로 이동)
+                    ref.read(focusedMonthProvider.notifier).update(
+                      (date) => DateTime(date.year, date.month - 1, 1),
+                    );
                   }
+                },
+                // [수정 3 / Task 3] 내부의 달력 GridView는 반드시 shrinkWrap: true와 NeverScrollableScrollPhysics를 달아 충돌 방지 및 비율 명시
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    mainAxisSpacing: 5.0,
+                    crossAxisSpacing: 5.0,
+                    childAspectRatio: 1.15, // 납작하고 이쁜 컴팩트 사각형 비율 지정
+                  ),
+                  itemCount: emptySpaces + totalDays,
+                  itemBuilder: (context, gridIndex) {
+                    if (gridIndex < emptySpaces) {
+                      return const SizedBox.shrink();
+                    }
 
-                  final dayNum = index - emptySpaces + 1;
-                  final targetDate = DateTime(year, month, dayNum);
-                  final log = _findLogForDate(logs, targetDate);
+                    final dayNum = gridIndex - emptySpaces + 1;
+                    final targetDate = DateTime(pageYear, pageMonth, dayNum);
+                    
+                    final isToday = targetDate.year == today.year &&
+                                    targetDate.month == today.month &&
+                                    targetDate.day == today.day;
+                    final isFuture = targetDate.isAfter(today);
+                    final isPast = targetDate.isBefore(today);
 
-                  if (log == null) {
-                    // 기록이 없는 빈 캘린더 칸
-                    return GestureDetector(
-                      onTap: () => _showEmptyBottomSheet(context, targetDate),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
+                    // 오늘 날짜 기분 체크/물장구 동기화
+                    DailyLog? log;
+                    if (isToday) {
+                      final homeState = ref.watch(homeProvider);
+                      final completedCount = homeState.completedGoals.length;
+                      
+                      String grassType;
+                      int level;
+                      if (completedCount == 0) {
+                        grassType = '~';
+                        level = 0;
+                      } else if (completedCount == 1) {
+                        grassType = '~';
+                        level = 1;
+                      } else if (completedCount == 2) {
+                        grassType = '⭐';
+                        level = 2;
+                      } else {
+                        grassType = '🪸';
+                        level = 3;
+                      }
+
+                      log = DailyLog(
+                        date: targetDate,
+                        mood: homeState.selectedMood ?? '☁️ 잔잔',
+                        completedTasks: homeState.completedGoals.map((g) => g.title).toList(),
+                        grassType: grassType,
+                        level: level,
+                        boogiQuote: completedCount == 0 
+                          ? '오늘도 나만의 속도로 헤엄치기 시작해보자.'
+                          : '오늘도 나의 걸음으로 꾸준히 헤엄친 나를 칭찬해.',
+                      );
+                    } else {
+                      log = _findLogForDate(logs, targetDate);
+                    }
+
+                    // ── (1) 미래 날짜 셀 렌더링 ──
+                    if (isFuture) {
+                      return Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4FA095).withValues(alpha: 0.02),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(10.0),
                           border: Border.all(
-                            color: const Color(0xFF4FA095).withValues(alpha: 0.06),
+                            color: const Color(0xFFB2DFDB).withValues(alpha: 0.4),
                             width: 1.0,
                           ),
                         ),
@@ -731,79 +1001,138 @@ class _SeaGrassView extends ConsumerWidget {
                               child: Text(
                                 '$dayNum',
                                 style: TextStyle(
-                                  fontSize: 10.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF5A7D82).withValues(alpha: 0.35),
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF5A7D82).withValues(alpha: 0.3),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }
-
-                  // 기록이 존재하는 유효 셀 렌더링
-                  final levelColor = _levelColors[log.level];
-                  final isDarkLevel = log.level >= 2;
-
-                  return GestureDetector(
-                    onTap: () => _showDetailBottomSheet(context, log),
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: levelColor,
-                        borderRadius: BorderRadius.circular(10.0),
-                        border: Border.all(
-                          color: levelColor.withValues(alpha: 0.5),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: 4.0,
-                            left: 5.0,
-                            child: Text(
-                              '$dayNum',
-                              style: TextStyle(
-                                fontSize: 10.0,
-                                fontWeight: FontWeight.bold,
-                                color: isDarkLevel
-                                    ? Colors.white.withValues(alpha: 0.6)
-                                    : const Color(0xFF5A7D82).withValues(alpha: 0.55),
-                              ),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              log.grassType,
-                              style: TextStyle(
-                                fontSize: log.grassType == '~' ? 16.0 : 14.0,
-                                color: log.level <= 1
-                                    ? const Color(0xFF5A7D82)
-                                    : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                      .animate()
-                      .fade(
-                        delay: (20 * dayNum).ms,
-                        duration: 300.ms,
-                      )
-                      .scale(
-                        delay: (20 * dayNum).ms,
-                        begin: const Offset(0.7, 0.7),
-                        end: const Offset(1.0, 1.0),
-                        duration: 300.ms,
-                        curve: Curves.easeOutBack,
                       );
-                },
-              ),
+                    }
+
+                    // ── (2) 기록 없는 과거 날짜 셀 렌더링 (연한 회색 흐릿한 물결) ──
+                    if (isPast && log == null) {
+                      return GestureDetector(
+                        onTap: () => _showEmptyBottomSheet(context, targetDate),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFB0BEC5).withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10.0),
+                            border: Border.all(
+                              color: const Color(0xFFB0BEC5).withValues(alpha: 0.15),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                top: 4.0,
+                                left: 5.0,
+                                child: Text(
+                                  '$dayNum',
+                                  style: const TextStyle(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFB0BEC5),
+                                  ),
+                                ),
+                              ),
+                              const Center(
+                                child: Text(
+                                  '~',
+                                  style: TextStyle(
+                                    fontSize: 16.0,
+                                    color: Color(0xFFCFD8DC),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    // ── (3) 오늘 강조 (비비드 코랄) 또는 데이터 있는 과거 날짜 셀 ──
+                    final isDarkLevel = log!.level >= 2;
+
+                    return GestureDetector(
+                      onTap: () => _showDetailBottomSheet(context, log!, isToday),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isToday 
+                              ? const Color(0xFFFF823A) // 선명한 비비드 코랄
+                              : _levelColors[log.level],
+                          borderRadius: BorderRadius.circular(10.0),
+                          border: Border.all(
+                              color: isToday 
+                                  ? const Color(0xFFFF823A) 
+                                  : _levelColors[log.level].withValues(alpha: 0.5),
+                            width: 1.0,
+                          ),
+                          boxShadow: isToday
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFFFF823A).withValues(alpha: 0.35),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ]
+                              : [],
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: 4.0,
+                              left: 5.0,
+                              child: Text(
+                                  '$dayNum',
+                                  style: TextStyle(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: isToday
+                                        ? Colors.white // 비비드 코랄 위 하얀 글씨
+                                        : (isDarkLevel
+                                            ? Colors.white.withValues(alpha: 0.6)
+                                            : const Color(0xFF5A7D82).withValues(alpha: 0.55)),
+                                  ),
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  log.grassType,
+                                  style: TextStyle(
+                                    fontSize: log.grassType == '~' ? 16.0 : 14.0,
+                                    color: isToday
+                                        ? Colors.white // 비비드 코랄 위 하얀 이모지
+                                        : (log.level <= 1
+                                            ? const Color(0xFF5A7D82)
+                                            : Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                          .animate()
+                          .fade(
+                            delay: (15 * dayNum).ms,
+                            duration: 300.ms,
+                          )
+                          .scale(
+                            delay: (15 * dayNum).ms,
+                            begin: const Offset(0.7, 0.7),
+                            end: const Offset(1.0, 1.0),
+                            duration: 300.ms,
+                            curve: Curves.easeOutBack,
+                          );
+                    },
+                  ),
+                ),
 
               const SizedBox(height: 20.0),
 
@@ -867,15 +1196,13 @@ class _JourneyMapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 섬을 역순으로 표시 (위 = 목적지, 아래 = 현재 위치)
     final islandsTopToBottom = _mockIslands.reversed.toList();
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    // [수정 3] 최상단에서 전체 스크롤을 하므로 본문 여정 지도 위젯 내부의 SingleChildScrollView는 제거하고 Padding으로 구성
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         children: [
-          // ── 지도 타이틀 ──
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
@@ -883,7 +1210,7 @@ class _JourneyMapView extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(18.0),
               border: Border.all(
-                color: const Color(0xFFE0F2F1),
+                color: const Color(0xFFB2DFDB).withValues(alpha: 0.4),
                 width: 1.0,
               ),
               boxShadow: [
@@ -904,7 +1231,7 @@ class _JourneyMapView extends StatelessWidget {
                     '아직 갈 길이 멀지만, 시작한 것만으로도 대단해.\n'
                     '천천히 헤엄치자.',
                     style: TextStyle(
-                      color: Color(0xFF1E5257),
+                      color: Color(0xFF004D40),
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       height: 1.6,
@@ -920,9 +1247,7 @@ class _JourneyMapView extends StatelessWidget {
 
           const SizedBox(height: 32.0),
 
-          // ── 섬 & 점선 경로 ──
           ...List.generate(islandsTopToBottom.length * 2 - 1, (index) {
-            // 짝수 인덱스: 섬, 홀수 인덱스: 점선
             if (index.isEven) {
               final islandIndex = index ~/ 2;
               final island = islandsTopToBottom[islandIndex];
@@ -931,7 +1256,6 @@ class _JourneyMapView extends StatelessWidget {
                       .where((e) => e.isReached)
                       .toList()
                       .last == island;
-              // 징검다리 효과: 섬을 좌우로 교차 배치
               final alignment = index % 4 == 0
                   ? Alignment.centerRight
                   : Alignment.centerLeft;
@@ -945,7 +1269,6 @@ class _JourneyMapView extends StatelessWidget {
                 ),
               );
             } else {
-              // 점선 구간
               return _buildDottedSegment(height: 70.0);
             }
           }),
@@ -956,7 +1279,6 @@ class _JourneyMapView extends StatelessWidget {
     );
   }
 
-  /// 유기적 형태의 둥근 섬 컨테이너
   Widget _buildIslandContainer({
     required _IslandData island,
     required bool showTurtle,
@@ -971,7 +1293,6 @@ class _JourneyMapView extends StatelessWidget {
           width: 170,
           padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 22.0),
           decoration: BoxDecoration(
-            // 자연스러운 유기적 바위 섬 모양의 비대칭 border-radius
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(42),
               topRight: Radius.circular(55),
@@ -1029,7 +1350,6 @@ class _JourneyMapView extends StatelessWidget {
                   height: 1.3,
                 ),
               ),
-              // 도달한 섬에는 작은 도장 배지
               if (isReached) ...[
                 const SizedBox(height: 10),
                 Container(
@@ -1064,7 +1384,6 @@ class _JourneyMapView extends StatelessWidget {
               curve: Curves.easeInOutSine,
             ),
 
-        // 🐢 부기 — 현재 유저 위치 표시
         if (showTurtle)
           Positioned(
             left: -38,
@@ -1091,7 +1410,6 @@ class _JourneyMapView extends StatelessWidget {
         );
   }
 
-  /// 섬과 섬 사이를 잇는 점선 세그먼트
   Widget _buildDottedSegment({required double height}) {
     return SizedBox(
       height: height,

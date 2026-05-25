@@ -5,23 +5,24 @@ import '../providers/onboarding_provider.dart';
 import '../providers/home_provider.dart';
 
 // ─────────────────────────────────────────────────────────────
-// 홈 화면 — Finch 스타일 캐릭터 인터랙션 + 목표 리스트
+// 홈 화면 — Finch 스타일 캐릭터 인터랙션 + 목표 리스트 (Fidelity 리팩토링)
+// 디자인 톤: 파스텔 민트(#B2DFDB) 베이스 + 비비드 코랄(#FF823A) 포인트
 // ─────────────────────────────────────────────────────────────
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  // 감정별 테마 컬러
+  // 감정별 테마 컬러 (코랄 포인트와 민트 베이스에 어울리는 소프트 톤)
   Color _getMoodColor(String? mood) {
     switch (mood) {
       case '☀️ 맑음':
-        return const Color(0xFFFBC02D);
+        return const Color(0xFFFF823A); // 성취와 오늘을 나타내는 비비드 코랄
       case '☁️ 잔잔':
-        return const Color(0xFF4DB6AC);
+        return const Color(0xFF4DB6AC); // 평온한 민트
       case '🌧️ 비 옴':
-        return const Color(0xFF5C6BC0);
+        return const Color(0xFF5C6BC0); // 깊은 바다 파랑
       default:
-        return const Color(0xFF4FA095);
+        return const Color(0xFF4DB6AC);
     }
   }
 
@@ -36,10 +37,10 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // ── 1. 배경 물결 데코레이션 ──
+          // ── 1. 배경 물결 데코레이션 (파스텔 민트 베이스) ──
           ...List.generate(3, (index) {
             final double bottom = 40.0 + (index * 35);
-            final double opacity = 0.12 - (index * 0.03);
+            final double opacity = 0.15 - (index * 0.04);
             final int duration = 6000 + (index * 2000);
             return Positioned(
               left: -60,
@@ -75,7 +76,7 @@ class HomeScreen extends ConsumerWidget {
                   _buildTopBar(context, ref, onboardingState),
                   const SizedBox(height: 20.0),
 
-                  // [캐릭터 섹션] 부기 + 무드 칩 + 인용문
+                  // [캐릭터 섹션] 부기 🐢 + 기분 칩 + 인용문
                   _buildCharacterSection(
                     homeState: homeState,
                     onboardingState: onboardingState,
@@ -83,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24.0),
 
-                  // [에너지 바] 여행 에너지 프로그레스 바
+                  // [에너지 바] 여행 에너지 프로그레스 바 (민트 ➔ 코랄 그라데이션)
                   _buildEnergyBar(homeState),
                   const SizedBox(height: 28.0),
 
@@ -127,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
                   // [추가 버튼] 목표 추가
                   _buildAddGoalButton(context),
 
-                  // 에너지 달성 완료 메시지
+                  // 에너지 달성 완료 메시지 (비비드 코랄 하이라이트 배너)
                   if (homeState.energyProgress >= 1.0) ...[
                     const SizedBox(height: 20.0),
                     _buildCompletionBanner(),
@@ -139,7 +140,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // ── 3. 모닥불 FAB ──
+          // ── 3. 모닥불 FAB (비비드 코랄 강조) ──
           Positioned(
             right: 20.0,
             bottom: 104.0,
@@ -162,7 +163,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    backgroundColor: const Color(0xFFD87D56),
+                    backgroundColor: const Color(0xFFFF823A),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -171,7 +172,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 );
               },
-              backgroundColor: const Color(0xFFE89A73),
+              backgroundColor: const Color(0xFFFF823A),
               foregroundColor: Colors.white,
               elevation: 4.0,
               shape: RoundedRectangleBorder(
@@ -192,7 +193,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
           ),
 
-          // ── 4. 일간 기분 체크 오버레이 (isMoodSelected가 false일 때만 표시) ──
+          // ── 4. 일간 기분 체크 오버레이 (진입 시 1회 필수 노출) ──
           IgnorePointer(
             ignoring: homeState.isMoodSelected,
             child: AnimatedOpacity(
@@ -220,10 +221,10 @@ class HomeScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           decoration: BoxDecoration(
-            color: const Color(0xFF4FA095).withValues(alpha: 0.1),
+            color: const Color(0xFFB2DFDB).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16.0),
             border: Border.all(
-              color: const Color(0xFF4FA095).withValues(alpha: 0.25),
+              color: const Color(0xFFB2DFDB).withValues(alpha: 0.4),
             ),
           ),
           child: Row(
@@ -234,7 +235,7 @@ class HomeScreen extends ConsumerWidget {
                     ? onboardingState.userStatus
                     : '포근한 여행자',
                 style: const TextStyle(
-                  color: Color(0xFF1E5257),
+                  color: Color(0xFF004D40),
                   fontSize: 11.5,
                   fontWeight: FontWeight.bold,
                 ),
@@ -274,7 +275,7 @@ class HomeScreen extends ConsumerWidget {
   }) {
     return Column(
       children: [
-        // 무드 선택 이후 기분 칩 표시
+        // 무드 선택 이후 비비드 코랄 또는 파스텔 민트 무드 칩 표시
         if (homeState.isMoodSelected && homeState.selectedMood != null)
           Container(
             margin: const EdgeInsets.only(bottom: 12.0),
@@ -282,14 +283,16 @@ class HomeScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               color: moodColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14.0),
-              border: Border.all(color: moodColor.withValues(alpha: 0.3)),
+              border: Border.all(color: moodColor.withValues(alpha: 0.35)),
             ),
             child: Text(
               homeState.selectedMood!,
               style: TextStyle(
                 fontSize: 13.0,
-                fontWeight: FontWeight.w700,
-                color: moodColor,
+                fontWeight: FontWeight.w800,
+                color: moodColor == const Color(0xFFFF823A) 
+                    ? const Color(0xFFFF823A)
+                    : const Color(0xFF00796B),
               ),
             ),
           )
@@ -304,7 +307,6 @@ class HomeScreen extends ConsumerWidget {
         Stack(
           alignment: Alignment.center,
           children: [
-            // 무드 기반 후광 효과
             if (homeState.isMoodSelected)
               Container(
                 width: 130,
@@ -313,7 +315,7 @@ class HomeScreen extends ConsumerWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: moodColor.withValues(alpha: 0.2),
+                      color: moodColor.withValues(alpha: 0.25),
                       blurRadius: 40,
                       spreadRadius: 10,
                     ),
@@ -349,7 +351,7 @@ class HomeScreen extends ConsumerWidget {
 
         const SizedBox(height: 14.0),
 
-        // 유저 서약 인용문 또는 기본 안내 문구
+        // 서약 인용문 (담백한 안내 문구)
         Text(
           onboardingState.pledgeText.isNotEmpty
               ? '"${onboardingState.pledgeText}"'
@@ -369,7 +371,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // ─── 에너지 프로그레스 바 ──────────────────────────────────
+  // ─── 에너지 프로그레스 바 (민트 ➔ 비비드 코랄 그라데이션) ─────────────────
 
   Widget _buildEnergyBar(HomeState homeState) {
     final progress = homeState.energyProgress.clamp(0.0, 1.0);
@@ -377,50 +379,49 @@ class HomeScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(18.0),
-        border: Border.all(color: const Color(0xFFE0F2F1), width: 1.0),
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(color: const Color(0xFFB2DFDB).withValues(alpha: 0.4), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // 라벨 행
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 '⚡ 여행 에너지',
                 style: TextStyle(
-                  color: Color(0xFF1E5257),
+                  color: Color(0xFF004D40),
                   fontSize: 14.0,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               Text(
                 '${homeState.totalEnergy} / ${homeState.maxEnergy}',
-                style: TextStyle(
-                  color: const Color(0xFF4FA095).withValues(alpha: 0.9),
-                  fontSize: 13.0,
-                  fontWeight: FontWeight.w700,
+                style: const TextStyle(
+                  color: Color(0xFFFF823A), // 비비드 코랄로 수치 강조
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10.0),
 
-          // 프로그레스 바 본체
+          // 프로그레스 바 본체 (민트에서 비비드 코랄로 자연스러운 변화)
           LayoutBuilder(
             builder: (context, constraints) {
               return Container(
                 height: 14.0,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0F2F1),
+                  color: const Color(0xFFB2DFDB).withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(7.0),
                 ),
                 child: Align(
@@ -431,14 +432,13 @@ class HomeScreen extends ConsumerWidget {
                     width: constraints.maxWidth * progress,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF6DEBE1), Color(0xFF4FA095)],
+                        colors: [Color(0xFF80CBC4), Color(0xFFFF823A)],
                       ),
                       borderRadius: BorderRadius.circular(7.0),
                       boxShadow: progress > 0
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF4FA095)
-                                    .withValues(alpha: 0.3),
+                                color: const Color(0xFFFF823A).withValues(alpha: 0.25),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -472,23 +472,22 @@ class HomeScreen extends ConsumerWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(18.0),
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20.0),
         border: Border.all(
-          color: const Color(0xFFE0F2F1),
+          color: const Color(0xFFB2DFDB).withValues(alpha: 0.4),
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      clipBehavior: Clip.antiAlias, // 둥근 모서리 내부 클리핑
+      clipBehavior: Clip.antiAlias,
       child: Theme(
-        // ExpansionTile 기본 테두리(divider) 완전 제거
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           key: PageStorageKey<String>(sectionKey),
@@ -508,28 +507,29 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  color: Color(0xFF1E5257),
+                  color: Color(0xFF004D40),
                   fontSize: 15.0,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(width: 8),
-              // 목표 개수 뱃지
+              
+              // 목표 개수 뱃지 (완료 섹션은 코랄 포인트, 활성은 민트 베이스)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: isCompletedSection
-                      ? const Color(0xFF4FA095).withValues(alpha: 0.12)
-                      : const Color(0xFFE0F2F1),
+                      ? const Color(0xFFFF823A).withValues(alpha: 0.12)
+                      : const Color(0xFFB2DFDB).withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   '${goals.length}',
                   style: TextStyle(
                     color: isCompletedSection
-                        ? const Color(0xFF4FA095)
-                        : const Color(0xFF5A7D82),
+                        ? const Color(0xFFFF823A)
+                        : const Color(0xFF004D40),
                     fontSize: 11.5,
                     fontWeight: FontWeight.bold,
                   ),
@@ -546,7 +546,7 @@ class HomeScreen extends ConsumerWidget {
                         height: 1,
                         indent: 16,
                         endIndent: 16,
-                        color: const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+                        color: const Color(0xFFB2DFDB).withValues(alpha: 0.25),
                       ),
                     _buildGoalItem(context, goals[i], notifier),
                   ],
@@ -559,8 +559,6 @@ class HomeScreen extends ConsumerWidget {
         .fade(delay: 400.ms, duration: 600.ms)
         .slideY(begin: 0.05, end: 0.0, curve: Curves.easeOut);
   }
-
-  // ─── 빈 섹션 안내 메시지 ────────────────────────────────────
 
   Widget _buildEmptyState(bool isCompletedSection) {
     return Padding(
@@ -580,7 +578,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // ─── 개별 목표 아이템 행 ────────────────────────────────────
+  // ─── 개별 목표 아이템 행 (비비드 코랄 체크박스 & 라인 쓰루 연동) ───────────────────
 
   Widget _buildGoalItem(
     BuildContext context,
@@ -592,7 +590,6 @@ class HomeScreen extends ConsumerWidget {
         final willComplete = !goal.isCompleted;
         notifier.toggleGoal(goal.id);
 
-        // 목표 달성 시 축하 피드백
         if (willComplete) {
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -602,13 +599,13 @@ class HomeScreen extends ConsumerWidget {
                   const Text('⚡ ', style: TextStyle(fontSize: 16)),
                   Expanded(
                     child: Text(
-                      '+${goal.energyReward} 에너지 충전!',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      '+${goal.energyReward} 에너지 충전 완료!',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              backgroundColor: const Color(0xFF4FA095),
+              backgroundColor: const Color(0xFFFF823A), // 성취의 비비드 코랄
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -623,21 +620,21 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         child: Row(
           children: [
-            // 커스텀 원형 체크박스
+            // 커스텀 코랄 원형 체크박스
             AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutBack,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
               width: 24,
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: goal.isCompleted
-                    ? const Color(0xFF4FA095)
+                    ? const Color(0xFFFF823A)
                     : Colors.transparent,
                 border: Border.all(
                   color: goal.isCompleted
-                      ? const Color(0xFF4FA095)
-                      : const Color(0xFF8BA6A1),
+                      ? const Color(0xFFFF823A)
+                      : const Color(0xFF80CBC4),
                   width: 2,
                 ),
               ),
@@ -647,42 +644,42 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
 
-            // 목표 제목
+            // 목표 제목 (완료 시 은은한 회색 처리)
             Expanded(
               child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 250),
                 style: TextStyle(
                   color: goal.isCompleted
-                      ? const Color(0xFF8BA6A1)
-                      : const Color(0xFF1E5257),
+                      ? const Color(0xFFB0BEC5) // 성취 탭 내 회색 텍스트
+                      : const Color(0xFF004D40),
                   fontSize: 14.0,
                   fontWeight: FontWeight.w600,
                   decoration: goal.isCompleted
                       ? TextDecoration.lineThrough
                       : TextDecoration.none,
-                  decorationColor: const Color(0xFF8BA6A1),
+                  decorationColor: const Color(0xFFB0BEC5),
                   fontFamily: 'Pretendard',
                 ),
                 child: Text(goal.title),
               ),
             ),
 
-            // 에너지 보상 뱃지
+            // 에너지 보상 뱃지 (비비드 코랄 하이라이트)
             AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
               decoration: BoxDecoration(
                 color: goal.isCompleted
-                    ? const Color(0xFF4FA095).withValues(alpha: 0.12)
-                    : const Color(0xFFF0F5F5),
+                    ? const Color(0xFFFF823A).withValues(alpha: 0.12)
+                    : const Color(0xFFB2DFDB).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '+${goal.energyReward}⚡',
                 style: TextStyle(
                   color: goal.isCompleted
-                      ? const Color(0xFF4FA095)
-                      : const Color(0xFF8BA6A1),
+                      ? const Color(0xFFFF823A)
+                      : const Color(0xFF00796B),
                   fontSize: 11.5,
                   fontWeight: FontWeight.bold,
                 ),
@@ -694,7 +691,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // ─── 목표 추가 버튼 ────────────────────────────────────────
+  // ─── 목표 추가 버튼 (코랄 포인트 피드백) ──────────────────────────────────
 
   Widget _buildAddGoalButton(BuildContext context) {
     return GestureDetector(
@@ -708,7 +705,7 @@ class HomeScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     '목표 추가 기능 준비 중',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -725,24 +722,24 @@ class HomeScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF4FA095).withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(18.0),
+          color: const Color(0xFFFF823A).withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20.0),
           border: Border.all(
-            color: const Color(0xFF4FA095).withValues(alpha: 0.2),
+            color: const Color(0xFFFF823A).withValues(alpha: 0.25),
             width: 1.5,
           ),
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_rounded, color: Color(0xFF4FA095), size: 20),
+            Icon(Icons.add_rounded, color: Color(0xFFFF823A), size: 20),
             SizedBox(width: 6),
             Text(
               '목표 추가하기',
               style: TextStyle(
-                color: Color(0xFF4FA095),
+                color: Color(0xFFFF823A),
                 fontSize: 13.5,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -753,22 +750,23 @@ class HomeScreen extends ConsumerWidget {
         .fade(delay: 700.ms, duration: 500.ms);
   }
 
-  // ─── 에너지 100% 달성 배너 ─────────────────────────────────
+  // ─── 에너지 100% 달성 배너 (Vivid Coral) ─────────────────────────────────
 
   Widget _buildCompletionBanner() {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF4FA095).withValues(alpha: 0.15),
-            const Color(0xFF6DEBE1).withValues(alpha: 0.15),
-          ],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF823A), Color(0xFFFFAB40)],
         ),
-        borderRadius: BorderRadius.circular(18.0),
-        border: Border.all(
-          color: const Color(0xFF4FA095).withValues(alpha: 0.3),
-        ),
+        borderRadius: BorderRadius.circular(20.0),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF823A).withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -778,9 +776,10 @@ class HomeScreen extends ConsumerWidget {
           Text(
             '오늘의 여행 에너지를 모두 모았어!',
             style: TextStyle(
-              color: Color(0xFF1E5257),
+              color: Colors.white,
               fontSize: 14.0,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.2,
             ),
           ),
         ],
@@ -795,7 +794,7 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildMoodOverlay(WidgetRef ref, HomeNotifier notifier) {
     return Container(
-      color: const Color(0xFF1E5257).withValues(alpha: 0.45),
+      color: const Color(0xFF004D40).withValues(alpha: 0.45),
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -805,7 +804,7 @@ class HomeScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(28.0),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1E5257).withValues(alpha: 0.15),
+                color: const Color(0xFF004D40).withValues(alpha: 0.15),
                 blurRadius: 30,
                 offset: const Offset(0, 12),
               ),
@@ -814,15 +813,12 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 물결 장식
               const Text('🌊', style: TextStyle(fontSize: 40)),
               const SizedBox(height: 16.0),
-
-              // 질문
               const Text(
                 '오늘 바다는 어때?',
                 style: TextStyle(
-                  color: Color(0xFF1E5257),
+                  color: Color(0xFF004D40),
                   fontSize: 20.0,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
@@ -839,26 +835,25 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24.0),
 
-              // 기분 선택 버튼 3개
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildMoodButton(
                     emoji: '☀️',
                     label: '맑음',
-                    color: const Color(0xFFFBC02D),
+                    color: const Color(0xFFFF823A), // 성취와 매칭되는 선명한 코랄
                     onTap: () => notifier.selectMood('☀️ 맑음'),
                   ),
                   _buildMoodButton(
                     emoji: '☁️',
                     label: '잔잔',
-                    color: const Color(0xFF4DB6AC),
+                    color: const Color(0xFF4DB6AC), // 평온한 민트
                     onTap: () => notifier.selectMood('☁️ 잔잔'),
                   ),
                   _buildMoodButton(
                     emoji: '🌧️',
                     label: '비 옴',
-                    color: const Color(0xFF5C6BC0),
+                    color: const Color(0xFF5C6BC0), // 바다의 우울함
                     onTap: () => notifier.selectMood('🌧️ 비 옴'),
                   ),
                 ],
@@ -905,7 +900,7 @@ class HomeScreen extends ConsumerWidget {
               style: TextStyle(
                 color: color,
                 fontSize: 12.5,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -923,7 +918,7 @@ class WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF6DEBE1).withValues(alpha: 0.3)
+      ..color = const Color(0xFFB2DFDB).withValues(alpha: 0.35)
       ..style = PaintingStyle.fill;
 
     final path = Path()
