@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/profile_provider.dart';
+import '../providers/onboarding_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -10,6 +11,8 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
     final profileNotifier = ref.read(profileProvider.notifier);
+    final onboardingState = ref.watch(onboardingProvider);
+    final turtleName = onboardingState.turtleName;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -59,7 +62,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 // 1. [Top Section - Traveler ID Card]
-                _buildTravelerIdCard(context, profile, profileNotifier)
+                _buildTravelerIdCard(context, profile, profileNotifier, turtleName)
                     .animate()
                     .fade(delay: 200.ms, duration: 500.ms)
                     .slideY(begin: 0.1, end: 0, curve: Curves.easeOutBack),
@@ -74,7 +77,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 32),
 
                 // 3. [Bottom Section - Settings & Data Management]
-                _buildSettingsSection(context, profile, profileNotifier)
+                _buildSettingsSection(context, profile, profileNotifier, turtleName)
                     .animate()
                     .fade(delay: 500.ms, duration: 600.ms)
                     .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
@@ -94,6 +97,7 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     ProfileState profile,
     ProfileNotifier profileNotifier,
+    String turtleName,
   ) {
     return Container(
       width: double.infinity,
@@ -183,7 +187,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '부기와 함께한 지 D+${profile.companionDays}',
+                  '${turtleName.isNotEmpty ? "$turtleName부기" : "부기"}와 함께한 지 D+${profile.companionDays}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13.5,
@@ -334,6 +338,7 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     ProfileState profile,
     ProfileNotifier profileNotifier,
+    String turtleName,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +389,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 onTap: () {
                   if (profile.isNotificationsEnabled) {
-                    _showTimePicker(context, profile, profileNotifier);
+                    _showTimePicker(context, profile, profileNotifier, turtleName);
                   } else {
                     profileNotifier.toggleNotifications();
                   }
@@ -710,6 +715,7 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     ProfileState profile,
     ProfileNotifier profileNotifier,
+    String turtleName,
   ) async {
     // 임시로 편리하게 30분 단위의 시간대를 직접 고르는 다정하고 예쁜 바텀시트 제작
     final times = [
@@ -743,9 +749,9 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                '부기가 항해를 점검하러 올 아름다운 저녁 또는 아침 시간을 정해보세요.',
-                style: TextStyle(
+              Text(
+                '${turtleName.isNotEmpty ? "$turtleName부기" : "부기"}가 항해를 점검하러 올 아름다운 저녁 또는 아침 시간을 정해보세요.',
+                style: const TextStyle(
                   color: Color(0xFF5A7D82),
                   fontSize: 12.0,
                   fontWeight: FontWeight.w500,

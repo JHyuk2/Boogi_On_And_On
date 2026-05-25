@@ -7,6 +7,8 @@ class OnboardingState {
   final bool isUploading;
   final bool uploadSuccess;
   final String? errorMessage;
+  final String selectedPersona;
+  final String turtleName;
 
   OnboardingState({
     this.userStatus = '',
@@ -14,6 +16,8 @@ class OnboardingState {
     this.isUploading = false,
     this.uploadSuccess = false,
     this.errorMessage,
+    this.selectedPersona = '',
+    this.turtleName = '',
   });
 
   OnboardingState copyWith({
@@ -22,6 +26,8 @@ class OnboardingState {
     bool? isUploading,
     bool? uploadSuccess,
     String? errorMessage,
+    String? selectedPersona,
+    String? turtleName,
   }) {
     return OnboardingState(
       userStatus: userStatus ?? this.userStatus,
@@ -29,6 +35,8 @@ class OnboardingState {
       isUploading: isUploading ?? this.isUploading,
       uploadSuccess: uploadSuccess ?? this.uploadSuccess,
       errorMessage: errorMessage,
+      selectedPersona: selectedPersona ?? this.selectedPersona,
+      turtleName: turtleName ?? this.turtleName,
     );
   }
 }
@@ -38,6 +46,16 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   void setUserStatus(String status) {
     state = state.copyWith(userStatus: status);
+  }
+
+  void setSelectedPersona(String persona) {
+    state = state.copyWith(selectedPersona: persona);
+    // userStatus와 연동하여 기존 HomeScreen 등의 레이아웃에서 표시될 수 있도록 일관성 보장
+    state = state.copyWith(userStatus: persona);
+  }
+
+  void setTurtleName(String name) {
+    state = state.copyWith(turtleName: name);
   }
 
   void setPledgeText(String text) {

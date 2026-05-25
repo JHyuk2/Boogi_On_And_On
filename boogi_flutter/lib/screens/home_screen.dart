@@ -349,6 +349,28 @@ class HomeScreen extends ConsumerWidget {
               curve: Curves.easeOutBack,
             ),
 
+        const SizedBox(height: 10.0),
+
+        // 부기 고유 이름 말풍선 태그
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFFB2DFDB).withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(
+              color: const Color(0xFFB2DFDB).withValues(alpha: 0.5),
+            ),
+          ),
+          child: Text(
+            '${onboardingState.turtleName.isNotEmpty ? onboardingState.turtleName : '부기'}부기 🐢',
+            style: const TextStyle(
+              color: Color(0xFF004D40),
+              fontSize: 12.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ).animate().fade(delay: 300.ms, duration: 500.ms),
+
         const SizedBox(height: 14.0),
 
         // 서약 인용문 (담백한 안내 문구)
