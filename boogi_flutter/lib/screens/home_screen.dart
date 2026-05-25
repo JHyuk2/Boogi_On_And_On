@@ -4,34 +4,39 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/onboarding_provider.dart';
 import '../providers/home_provider.dart';
 
+// ─────────────────────────────────────────────────────────────
+// 홈 화면 — Finch 스타일 캐릭터 인터랙션 + 목표 리스트
+// ─────────────────────────────────────────────────────────────
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  // 감정별 테마 컬러
+  Color _getMoodColor(String? mood) {
+    switch (mood) {
+      case '☀️ 맑음':
+        return const Color(0xFFFBC02D);
+      case '☁️ 잔잔':
+        return const Color(0xFF4DB6AC);
+      case '🌧️ 비 옴':
+        return const Color(0xFF5C6BC0);
+      default:
+        return const Color(0xFF4FA095);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingState = ref.watch(onboardingProvider);
     final homeState = ref.watch(homeProvider);
     final homeNotifier = ref.read(homeProvider.notifier);
-
-    // 감정별 컬러 맵 지정 (선택 시 활용할 테마 컬러)
-    Color getEmotionColor(String emotion) {
-      switch (emotion) {
-        case '☀️ 맑음':
-          return const Color(0xFFFBC02D); // 포근하고 따뜻한 골드 옐로우
-        case '☁️ 잔잔':
-          return const Color(0xFF4DB6AC); // 차분하고 평온한 민트 테알
-        case '🌧️ 비 옴':
-          return const Color(0xFF5C6BC0); // 슬픔을 포근히 안아주는 인디고 블루
-        default:
-          return const Color(0xFF4FA095);
-      }
-    }
+    final moodColor = _getMoodColor(homeState.selectedMood);
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // main_layout의 그라데이션이 비치도록 설정
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 1. 잔잔하게 물결치는 바다 데코레이션
+          // ── 1. 배경 물결 데코레이션 ──
           ...List.generate(3, (index) {
             final double bottom = 40.0 + (index * 35);
             final double opacity = 0.12 - (index * 0.03);
@@ -43,332 +48,101 @@ class HomeScreen extends ConsumerWidget {
               height: 110,
               child: Opacity(
                 opacity: opacity,
-                child: const CustomPaint(
-                  painter: WavePainter(),
-                ),
+                child: const CustomPaint(painter: WavePainter()),
               )
-                  .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                  .slideX(begin: -0.06, end: 0.06, duration: duration.ms, curve: Curves.easeInOutSine),
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .slideX(
+                    begin: -0.06,
+                    end: 0.06,
+                    duration: duration.ms,
+                    curve: Curves.easeInOutSine,
+                  ),
             );
           }),
 
-          // 2. 메인 컨텐츠 영역
+          // ── 2. 메인 스크롤 콘텐츠 ──
           SafeArea(
-            bottom: false, // 바텀 네비게이션 플로팅과의 여유 공간을 위해
+            bottom: false,
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 8.0),
 
-                  // [상단 영역] 온보딩 정보 뱃지 및 환영 타이틀
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4FA095).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16.0),
-                          border: Border.all(
-                            color: const Color(0xFF4FA095).withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Text('⛵ ', style: TextStyle(fontSize: 12)),
-                            Text(
-                              onboardingState.userStatus.isNotEmpty
-                                  ? onboardingState.userStatus
-                                  : '포근한 여행자',
-                              style: const TextStyle(
-                                color: Color(0xFF1E5257),
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                          .animate()
-                          .fade(duration: 600.ms)
-                          .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
-                      
-                      // 온보딩 리셋/체험용 간소화된 버튼
-                      IconButton(
-                        onPressed: () {
-                          ref.read(onboardingProvider.notifier).reset();
-                          ref.read(homeProvider.notifier).reset();
-                          Navigator.of(context).pushReplacementNamed('/');
-                        },
-                        icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF5A7D82)),
-                        tooltip: '온보딩 다시하기',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24.0),
-
-                  // 위로와 안정을 주는 따뜻한 감성 질문
-                  const Text(
-                    '오늘 바다는 어때?',
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                      color: Color(0xFF1E5257),
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      height: 1.3,
-                    ),
-                  )
-                      .animate()
-                      .fade(duration: 700.ms)
-                      .slideY(begin: 0.15, end: 0.0, curve: Curves.easeOutCubic),
-
-                  const SizedBox(height: 6.0),
-                  
-                  // 유저가 등록한 다짐을 서브 텍스트로 녹여내어 극대화된 감성 선사
-                  Text(
-                    onboardingState.pledgeText.isNotEmpty
-                        ? '“${onboardingState.pledgeText}”'
-                        : '완벽하지 않아도 괜찮아. 느려도 꾸준히 헤엄치자.',
-                    style: const TextStyle(
-                      color: Color(0xFF5A7D82),
-                      fontSize: 13.0,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
-                      .animate()
-                      .fade(delay: 200.ms, duration: 700.ms),
-
+                  // [상단 바] 유저 상태 뱃지 + 리셋 버튼
+                  _buildTopBar(context, ref, onboardingState),
                   const SizedBox(height: 20.0),
 
-                  // 감정 체크인 버튼 목록 (ChoiceChips)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildEmotionChip(
-                        emotion: '☀️ 맑음',
-                        isSelected: homeState.selectedEmotion == '☀️ 맑음',
-                        onTap: () => homeNotifier.selectEmotion('☀️ 맑음'),
-                        themeColor: getEmotionColor('☀️ 맑음'),
-                      ),
-                      const SizedBox(width: 8.0),
-                      _buildEmotionChip(
-                        emotion: '☁️ 잔잔',
-                        isSelected: homeState.selectedEmotion == '☁️ 잔잔',
-                        onTap: () => homeNotifier.selectEmotion('☁️ 잔잔'),
-                        themeColor: getEmotionColor('☁️ 잔잔'),
-                      ),
-                      const SizedBox(width: 8.0),
-                      _buildEmotionChip(
-                        emotion: '🌧️ 비 옴',
-                        isSelected: homeState.selectedEmotion == '🌧️ 비 옴',
-                        onTap: () => homeNotifier.selectEmotion('🌧️ 비 옴'),
-                        themeColor: getEmotionColor('🌧️ 비 옴'),
-                      ),
-                    ],
-                  )
-                      .animate()
-                      .fade(delay: 350.ms, duration: 600.ms)
-                      .slideY(begin: 0.1, end: 0.0, curve: Curves.easeOut),
+                  // [캐릭터 섹션] 부기 + 무드 칩 + 인용문
+                  _buildCharacterSection(
+                    homeState: homeState,
+                    onboardingState: onboardingState,
+                    moodColor: moodColor,
+                  ),
+                  const SizedBox(height: 24.0),
 
-                  const SizedBox(height: 36.0),
+                  // [에너지 바] 여행 에너지 프로그레스 바
+                  _buildEnergyBar(homeState),
+                  const SizedBox(height: 28.0),
 
-                  // [중앙 영역] 둥근 유기적 바위 섬 컨테이너 & 궁극의 숨쉬기 퀘스트
-                  Center(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // 숨 쉬기 퀘스트 완료 시, 바위 섬 뒷편에서 은은하게 뿜어져 나오는 신비로운 후광 효과
-                        if (homeState.hasBreathed)
-                          Container(
-                            width: 250,
-                            height: 250,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF6DEBE1).withValues(alpha: 0.45),
-                                  blurRadius: 40,
-                                  spreadRadius: 15,
-                                ),
-                              ],
-                            ),
-                          )
-                              .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                              .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.15, 1.15), duration: 2.seconds, curve: Curves.easeInOutSine),
+                  // [완료 섹션] 오늘 완료한 일 (기본: 접힘)
+                  _buildCollapsibleSection(
+                    context: context,
+                    sectionKey: 'completed',
+                    title: '오늘 완료한 일',
+                    emoji: '✨',
+                    goals: homeState.completedGoals,
+                    notifier: homeNotifier,
+                    initiallyExpanded: false,
+                    isCompletedSection: true,
+                  ),
+                  const SizedBox(height: 16.0),
 
-                        // 바위 섬 메인 컨테이너
-                        GestureDetector(
-                          onTap: () {
-                            homeNotifier.toggleBreathed();
-                            _triggerQuestVibration(context, !homeState.hasBreathed);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 500),
-                            width: 240,
-                            height: 240,
-                            decoration: BoxDecoration(
-                              // 자연의 동글동글한 유기적 바위 섬을 재현하는 불규칙하고 부드러운 border-radius
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(90),
-                                topRight: Radius.circular(105),
-                                bottomLeft: Radius.circular(110),
-                                bottomRight: Radius.circular(85),
-                              ),
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: homeState.hasBreathed
-                                    ? [
-                                        const Color(0xFF539C94), // 따뜻한 온기가 빛나는 청록색 바위
-                                        const Color(0xFF7CCEC4), 
-                                      ]
-                                    : [
-                                        const Color(0xFF8FA19B), // 잔잔하고 거친 회녹색의 조용한 바위
-                                        const Color(0xFFA5B7B1),
-                                      ],
-                              ),
-                              border: Border.all(
-                                color: homeState.hasBreathed
-                                    ? const Color(0xFF6DEBE1).withValues(alpha: 0.7)
-                                    : const Color(0xFFE0F2F1).withValues(alpha: 0.4),
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (homeState.hasBreathed
-                                          ? const Color(0xFF4FA095)
-                                          : const Color(0xFF1E5257))
-                                      .withValues(alpha: 0.15),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // 바위 위에서 유유히 떠돌거나 둥실둥실 호흡하는 부기 🐢
-                                Text(
-                                  homeState.hasBreathed ? '🥰' : '🐢',
-                                  style: const TextStyle(fontSize: 48),
-                                )
-                                    .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                                    .slideY(begin: -0.08, end: 0.08, duration: 1600.ms, curve: Curves.easeInOutQuad),
-                                
-                                const SizedBox(height: 14),
+                  // [활성 섹션 1] 하루의 시작 (기본: 펼침)
+                  _buildCollapsibleSection(
+                    context: context,
+                    sectionKey: 'morning',
+                    title: '하루의 시작',
+                    emoji: '🌅',
+                    goals: homeState.activeBySection('morning'),
+                    notifier: homeNotifier,
+                    initiallyExpanded: true,
+                  ),
+                  const SizedBox(height: 16.0),
 
-                                // 필수 생존 퀘스트 텍스트 및 이쁜 체크 박스
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.04),
-                                        blurRadius: 6,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // 체크 상태에 따라 크기와 형태가 부드럽게 변하는 커스텀 애니메이션 체크박스
-                                      AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
-                                        width: 22,
-                                        height: 22,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: homeState.hasBreathed
-                                              ? const Color(0xFF4FA095)
-                                              : Colors.transparent,
-                                          border: Border.all(
-                                            color: const Color(0xFF4FA095),
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: homeState.hasBreathed
-                                            ? const Icon(
-                                                Icons.check,
-                                                size: 14,
-                                                color: Colors.white,
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      const Text(
-                                        '🪁 오늘 하루 숨 쉬기',
-                                        style: TextStyle(
-                                          color: Color(0xFF1E5257),
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: -0.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                              // 바위가 계속 둥둥 떠있는 느낌의 평온한 상하 애니메이션
-                              .animate(
-                                key: ValueKey('rock_island_${homeState.hasBreathed}'),
-                                onPlay: (controller) => controller.repeat(reverse: true),
-                              )
-                              .slideY(begin: -0.03, end: 0.03, duration: 2500.ms, curve: Curves.easeInOutSine)
-                              // 숨쉬기를 마쳤을 때 축하하는 심박동(Pulse) 애니메이션 작동
-                              .scale(
-                                begin: homeState.hasBreathed ? const Offset(1.03, 1.03) : const Offset(1.0, 1.0),
-                                end: homeState.hasBreathed ? const Offset(0.97, 0.97) : const Offset(1.0, 1.0),
-                                duration: homeState.hasBreathed ? 3.seconds : 100.ms,
-                                curve: Curves.easeInOutQuad,
-                              ),
-                        ),
-                      ],
-                    ),
-                  )
-                      .animate()
-                      .fade(delay: 500.ms, duration: 800.ms)
-                      .scale(delay: 500.ms, begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+                  // [활성 섹션 2] 언제든 편한 때! (기본: 펼침)
+                  _buildCollapsibleSection(
+                    context: context,
+                    sectionKey: 'anytime',
+                    title: '언제든 편한 때!',
+                    emoji: '🌊',
+                    goals: homeState.activeBySection('anytime'),
+                    notifier: homeNotifier,
+                    initiallyExpanded: true,
+                  ),
+                  const SizedBox(height: 20.0),
 
-                  const SizedBox(height: 32.0),
+                  // [추가 버튼] 목표 추가
+                  _buildAddGoalButton(context),
 
-                  // 안전하고 평온한 바다 공간에 있음을 상기시키는 감성 한 숟가락 코멘트
-                  Center(
-                    child: Text(
-                      homeState.hasBreathed
-                          ? '휴우... 깊은 평화가 깃들길 바랄게.'
-                          : '아무리 지치고 무기력해도,\n숨 쉬는 것만으로 오늘 너는 완벽하게 생존했어.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: homeState.hasBreathed ? const Color(0xFF1E5257) : const Color(0xFF7A989B),
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
-                      ),
-                    ),
-                  )
-                      .animate(key: ValueKey('breath_comment_${homeState.hasBreathed}'))
-                      .fade(duration: 400.ms),
+                  // 에너지 달성 완료 메시지
+                  if (homeState.energyProgress >= 1.0) ...[
+                    const SizedBox(height: 20.0),
+                    _buildCompletionBanner(),
+                  ],
 
-                  const SizedBox(height: 90.0), // 바텀 탭바에 가려지지 않기 위한 여백
+                  const SizedBox(height: 100.0), // 바텀 탭바 여백
                 ],
               ),
             ),
           ),
 
-          // [우측 하단] 특수 액션 버튼 (🔥 모닥불 FAB)
+          // ── 3. 모닥불 FAB ──
           Positioned(
             right: 20.0,
-            bottom: 104.0, // 바텀 플로팅 탭바(72px) 위에 안전하게 떠있도록 마진 설계
+            bottom: 104.0,
             child: FloatingActionButton.extended(
               onPressed: () {
                 ScaffoldMessenger.of(context).clearSnackBars();
@@ -405,112 +179,744 @@ class HomeScreen extends ConsumerWidget {
               ),
               label: const Text(
                 '모닥불',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.5),
               ),
               icon: const Text('🔥', style: TextStyle(fontSize: 18)),
             )
                 .animate()
                 .fade(delay: 800.ms, duration: 600.ms)
-                .scale(delay: 800.ms, begin: const Offset(0.7, 0.7), curve: Curves.easeOutBack),
+                .scale(
+                  delay: 800.ms,
+                  begin: const Offset(0.7, 0.7),
+                  curve: Curves.easeOutBack,
+                ),
+          ),
+
+          // ── 4. 일간 기분 체크 오버레이 (isMoodSelected가 false일 때만 표시) ──
+          IgnorePointer(
+            ignoring: homeState.isMoodSelected,
+            child: AnimatedOpacity(
+              opacity: homeState.isMoodSelected ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+              child: _buildMoodOverlay(ref, homeNotifier),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // 감정 체크인 커스텀 칩
-  Widget _buildEmotionChip({
-    required String emotion,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required Color themeColor,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
+  // ─── 상단 바: 유저 상태 뱃지 + 리셋 버튼 ───────────────────
+
+  Widget _buildTopBar(
+    BuildContext context,
+    WidgetRef ref,
+    OnboardingState onboardingState,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           decoration: BoxDecoration(
-            color: isSelected ? themeColor.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(18.0),
+            color: const Color(0xFF4FA095).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16.0),
             border: Border.all(
-              color: isSelected ? themeColor : const Color(0xFFE0F2F1),
-              width: isSelected ? 2.0 : 1.0,
+              color: const Color(0xFF4FA095).withValues(alpha: 0.25),
             ),
-            boxShadow: [
-              if (isSelected)
-                BoxShadow(
-                  color: themeColor.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                )
-              else
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          ),
+          child: Row(
+            children: [
+              const Text('⛵ ', style: TextStyle(fontSize: 12)),
+              Text(
+                onboardingState.userStatus.isNotEmpty
+                    ? onboardingState.userStatus
+                    : '포근한 여행자',
+                style: const TextStyle(
+                  color: Color(0xFF1E5257),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+            ],
+          ),
+        )
+            .animate()
+            .fade(duration: 600.ms)
+            .scale(
+              begin: const Offset(0.9, 0.9),
+              curve: Curves.easeOutBack,
+            ),
+        IconButton(
+          onPressed: () {
+            ref.read(onboardingProvider.notifier).reset();
+            ref.read(homeProvider.notifier).reset();
+            Navigator.of(context).pushReplacementNamed('/');
+          },
+          icon: const Icon(
+            Icons.refresh_rounded,
+            size: 20,
+            color: Color(0xFF5A7D82),
+          ),
+          tooltip: '온보딩 다시하기',
+        ),
+      ],
+    );
+  }
+
+  // ─── 캐릭터 섹션: 부기 🐢 + 무드 칩 + 인용문 ──────────────
+
+  Widget _buildCharacterSection({
+    required HomeState homeState,
+    required OnboardingState onboardingState,
+    required Color moodColor,
+  }) {
+    return Column(
+      children: [
+        // 무드 선택 이후 기분 칩 표시
+        if (homeState.isMoodSelected && homeState.selectedMood != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 5.0),
+            decoration: BoxDecoration(
+              color: moodColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14.0),
+              border: Border.all(color: moodColor.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              homeState.selectedMood!,
+              style: TextStyle(
+                fontSize: 13.0,
+                fontWeight: FontWeight.w700,
+                color: moodColor,
+              ),
+            ),
+          )
+              .animate()
+              .fade(duration: 400.ms)
+              .scale(
+                begin: const Offset(0.8, 0.8),
+                curve: Curves.easeOutBack,
+              ),
+
+        // 부기 캐릭터 (큼직하게) + 무드 기반 후광
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // 무드 기반 후광 효과
+            if (homeState.isMoodSelected)
+              Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: moodColor.withValues(alpha: 0.2),
+                      blurRadius: 40,
+                      spreadRadius: 10,
+                    ),
+                  ],
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(0.9, 0.9),
+                    end: const Offset(1.1, 1.1),
+                    duration: 2500.ms,
+                    curve: Curves.easeInOutSine,
+                  ),
+
+            // 부기 🐢 본체
+            const Text('🐢', style: TextStyle(fontSize: 72))
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .slideY(
+                  begin: -0.06,
+                  end: 0.06,
+                  duration: 1800.ms,
+                  curve: Curves.easeInOutQuad,
+                ),
+          ],
+        )
+            .animate()
+            .fade(delay: 200.ms, duration: 700.ms)
+            .scale(
+              delay: 200.ms,
+              begin: const Offset(0.8, 0.8),
+              curve: Curves.easeOutBack,
+            ),
+
+        const SizedBox(height: 14.0),
+
+        // 유저 서약 인용문 또는 기본 안내 문구
+        Text(
+          onboardingState.pledgeText.isNotEmpty
+              ? '"${onboardingState.pledgeText}"'
+              : '완벽하지 않아도 괜찮아. 느려도 꾸준히 헤엄치자.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF5A7D82),
+            fontSize: 13.0,
+            fontStyle: FontStyle.italic,
+            fontWeight: FontWeight.w500,
+            height: 1.5,
+          ),
+        )
+            .animate()
+            .fade(delay: 400.ms, duration: 600.ms),
+      ],
+    );
+  }
+
+  // ─── 에너지 프로그레스 바 ──────────────────────────────────
+
+  Widget _buildEnergyBar(HomeState homeState) {
+    final progress = homeState.energyProgress.clamp(0.0, 1.0);
+
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(18.0),
+        border: Border.all(color: const Color(0xFFE0F2F1), width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 라벨 행
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '⚡ 여행 에너지',
+                style: TextStyle(
+                  color: Color(0xFF1E5257),
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                '${homeState.totalEnergy} / ${homeState.maxEnergy}',
+                style: TextStyle(
+                  color: const Color(0xFF4FA095).withValues(alpha: 0.9),
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10.0),
+
+          // 프로그레스 바 본체
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Container(
+                height: 14.0,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0F2F1),
+                  borderRadius: BorderRadius.circular(7.0),
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutCubic,
+                    width: constraints.maxWidth * progress,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6DEBE1), Color(0xFF4FA095)],
+                      ),
+                      borderRadius: BorderRadius.circular(7.0),
+                      boxShadow: progress > 0
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF4FA095)
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : [],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fade(delay: 300.ms, duration: 600.ms)
+        .slideY(begin: 0.08, end: 0.0, curve: Curves.easeOut);
+  }
+
+  // ─── 접이식 목표 섹션 (ExpansionTile + 둥근 컨테이너) ─────
+
+  Widget _buildCollapsibleSection({
+    required BuildContext context,
+    required String sectionKey,
+    required String title,
+    required String emoji,
+    required List<GoalItem> goals,
+    required HomeNotifier notifier,
+    required bool initiallyExpanded,
+    bool isCompletedSection = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(18.0),
+        border: Border.all(
+          color: const Color(0xFFE0F2F1),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias, // 둥근 모서리 내부 클리핑
+      child: Theme(
+        // ExpansionTile 기본 테두리(divider) 완전 제거
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: PageStorageKey<String>(sectionKey),
+          shape: const RoundedRectangleBorder(side: BorderSide.none),
+          collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+          backgroundColor: Colors.transparent,
+          collapsedBackgroundColor: Colors.transparent,
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
+          childrenPadding: EdgeInsets.zero,
+          iconColor: const Color(0xFF5A7D82),
+          collapsedIconColor: const Color(0xFF8BA6A1),
+          title: Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF1E5257),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 목표 개수 뱃지
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isCompletedSection
+                      ? const Color(0xFF4FA095).withValues(alpha: 0.12)
+                      : const Color(0xFFE0F2F1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${goals.length}',
+                  style: TextStyle(
+                    color: isCompletedSection
+                        ? const Color(0xFF4FA095)
+                        : const Color(0xFF5A7D82),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          children: goals.isEmpty
+              ? [_buildEmptyState(isCompletedSection)]
+              : [
+                  for (int i = 0; i < goals.length; i++) ...[
+                    if (i > 0)
+                      Divider(
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16,
+                        color: const Color(0xFFE0F2F1).withValues(alpha: 0.8),
+                      ),
+                    _buildGoalItem(context, goals[i], notifier),
+                  ],
+                  const SizedBox(height: 4),
+                ],
+        ),
+      ),
+    )
+        .animate()
+        .fade(delay: 400.ms, duration: 600.ms)
+        .slideY(begin: 0.05, end: 0.0, curve: Curves.easeOut);
+  }
+
+  // ─── 빈 섹션 안내 메시지 ────────────────────────────────────
+
+  Widget _buildEmptyState(bool isCompletedSection) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+      child: Text(
+        isCompletedSection
+            ? '아직 완료한 일이 없어요. 천천히 시작해 볼까?'
+            : '모든 목표를 달성했어! 🎉',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Color(0xFF8BA6A1),
+          fontSize: 13.0,
+          fontWeight: FontWeight.w500,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+
+  // ─── 개별 목표 아이템 행 ────────────────────────────────────
+
+  Widget _buildGoalItem(
+    BuildContext context,
+    GoalItem goal,
+    HomeNotifier notifier,
+  ) {
+    return InkWell(
+      onTap: () {
+        final willComplete = !goal.isCompleted;
+        notifier.toggleGoal(goal.id);
+
+        // 목표 달성 시 축하 피드백
+        if (willComplete) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Text('⚡ ', style: TextStyle(fontSize: 16)),
+                  Expanded(
+                    child: Text(
+                      '+${goal.energyReward} 에너지 충전!',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF4FA095),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              duration: const Duration(milliseconds: 1200),
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(18.0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        child: Row(
+          children: [
+            // 커스텀 원형 체크박스
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: goal.isCompleted
+                    ? const Color(0xFF4FA095)
+                    : Colors.transparent,
+                border: Border.all(
+                  color: goal.isCompleted
+                      ? const Color(0xFF4FA095)
+                      : const Color(0xFF8BA6A1),
+                  width: 2,
+                ),
+              ),
+              child: goal.isCompleted
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+
+            // 목표 제목
+            Expanded(
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 300),
+                style: TextStyle(
+                  color: goal.isCompleted
+                      ? const Color(0xFF8BA6A1)
+                      : const Color(0xFF1E5257),
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.w600,
+                  decoration: goal.isCompleted
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                  decorationColor: const Color(0xFF8BA6A1),
+                  fontFamily: 'Pretendard',
+                ),
+                child: Text(goal.title),
+              ),
+            ),
+
+            // 에너지 보상 뱃지
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: goal.isCompleted
+                    ? const Color(0xFF4FA095).withValues(alpha: 0.12)
+                    : const Color(0xFFF0F5F5),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '+${goal.energyReward}⚡',
+                style: TextStyle(
+                  color: goal.isCompleted
+                      ? const Color(0xFF4FA095)
+                      : const Color(0xFF8BA6A1),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── 목표 추가 버튼 ────────────────────────────────────────
+
+  Widget _buildAddGoalButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Text('📝 ', style: TextStyle(fontSize: 16)),
+                Expanded(
+                  child: Text(
+                    '목표 추가 기능 준비 중',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF5A7D82),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14.0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4FA095).withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(18.0),
+          border: Border.all(
+            color: const Color(0xFF4FA095).withValues(alpha: 0.2),
+            width: 1.5,
+          ),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_rounded, color: Color(0xFF4FA095), size: 20),
+            SizedBox(width: 6),
+            Text(
+              '목표 추가하기',
+              style: TextStyle(
+                color: Color(0xFF4FA095),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    )
+        .animate()
+        .fade(delay: 700.ms, duration: 500.ms);
+  }
+
+  // ─── 에너지 100% 달성 배너 ─────────────────────────────────
+
+  Widget _buildCompletionBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF4FA095).withValues(alpha: 0.15),
+            const Color(0xFF6DEBE1).withValues(alpha: 0.15),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18.0),
+        border: Border.all(
+          color: const Color(0xFF4FA095).withValues(alpha: 0.3),
+        ),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('🎉', style: TextStyle(fontSize: 20)),
+          SizedBox(width: 8),
+          Text(
+            '오늘의 여행 에너지를 모두 모았어!',
+            style: TextStyle(
+              color: Color(0xFF1E5257),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fade(duration: 600.ms)
+        .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack);
+  }
+
+  // ─── 일간 기분 체크 오버레이 (Daily Mood Overlay) ──────────
+
+  Widget _buildMoodOverlay(WidgetRef ref, HomeNotifier notifier) {
+    return Container(
+      color: const Color(0xFF1E5257).withValues(alpha: 0.45),
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(28.0),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1E5257).withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 12),
+              ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                emotion.split(' ')[0], // 이모티콘만 추출 (☀️, ☁️, 🌧️)
-                style: const TextStyle(fontSize: 20),
-              )
-                  .animate(target: isSelected ? 1 : 0)
-                  .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.25, 1.25), duration: 200.ms, curve: Curves.easeOutBack),
-              const SizedBox(height: 4.0),
-              Text(
-                emotion.split(' ')[1], // 텍스트만 추출 (맑음, 무난, 벅참)
+              // 물결 장식
+              const Text('🌊', style: TextStyle(fontSize: 40)),
+              const SizedBox(height: 16.0),
+
+              // 질문
+              const Text(
+                '오늘 바다는 어때?',
                 style: TextStyle(
-                  color: isSelected ? themeColor.withValues(alpha: 0.95) : const Color(0xFF5A7D82),
-                  fontSize: 12.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: Color(0xFF1E5257),
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
                 ),
+              ),
+              const SizedBox(height: 6.0),
+              const Text(
+                '오늘의 기분을 바다 날씨로 알려줘.',
+                style: TextStyle(
+                  color: Color(0xFF5A7D82),
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24.0),
+
+              // 기분 선택 버튼 3개
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildMoodButton(
+                    emoji: '☀️',
+                    label: '맑음',
+                    color: const Color(0xFFFBC02D),
+                    onTap: () => notifier.selectMood('☀️ 맑음'),
+                  ),
+                  _buildMoodButton(
+                    emoji: '☁️',
+                    label: '잔잔',
+                    color: const Color(0xFF4DB6AC),
+                    onTap: () => notifier.selectMood('☁️ 잔잔'),
+                  ),
+                  _buildMoodButton(
+                    emoji: '🌧️',
+                    label: '비 옴',
+                    color: const Color(0xFF5C6BC0),
+                    onTap: () => notifier.selectMood('🌧️ 비 옴'),
+                  ),
+                ],
               ),
             ],
           ),
-        ),
+        )
+            .animate()
+            .fade(delay: 300.ms, duration: 500.ms)
+            .scale(
+              delay: 300.ms,
+              begin: const Offset(0.85, 0.85),
+              curve: Curves.easeOutBack,
+            ),
       ),
     );
   }
 
-  // 퀘스트 완료 시 소소한 스낵바나 반응 피드백
-  void _triggerQuestVibration(BuildContext context, bool isCompleted) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
+  Widget _buildMoodButton({
+    required String emoji,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 80,
+        padding: const EdgeInsets.symmetric(vertical: 14.0),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(18.0),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
           children: [
-            Text(isCompleted ? '🫁 ' : '🐢 ', style: const TextStyle(fontSize: 16)),
-            Expanded(
-              child: Text(
-                isCompleted
-                    ? '오늘 생존 퀘스트를 달성했습니다. 큰 쉼을 잘 내쉬었습니다.'
-                    : '오늘 하루 숨 쉬기 퀘스트가 리셋되었습니다. 조급하지 않게 숨을 쉬어 봐요.',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
-        backgroundColor: isCompleted ? const Color(0xFF4FA095) : const Color(0xFF7A989B),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        duration: const Duration(seconds: 2),
       ),
     );
   }
 }
 
-// 잔잔하게 흔들리는 물결을 만드는 CustomPainter
+// ─── 잔잔하게 흔들리는 물결 CustomPainter ─────────────────────
+
 class WavePainter extends CustomPainter {
   const WavePainter();
 
