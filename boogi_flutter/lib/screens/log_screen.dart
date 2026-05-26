@@ -672,8 +672,9 @@ class _SeaGrassViewState extends ConsumerState<_SeaGrassView> {
 
                       return GestureDetector(
                         onTap: () {
+                          // 선택한 연월의 1일로 정규화 (하드코딩 day 제거)
                           ref.read(focusedMonthProvider.notifier).state =
-                              DateTime(selectedYear, targetMonth, 25);
+                              DateTime(selectedYear, targetMonth, 1);
                           Navigator.pop(context);
                         },
                         child: Container(
@@ -749,8 +750,9 @@ class _SeaGrassViewState extends ConsumerState<_SeaGrassView> {
         ),
       ),
       data: (logs) {
-        // 시스템 기준 오늘 날짜 (2026-05-25)
-        final today = DateTime(2026, 5, 25);
+        // 실시간 로컬 날짜 (연·월·일만 추출하여 시/분/초 비교 오류 방지)
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
 
         // 통계 실시간 계산
         final coralCount = logs.where((e) => e.grassType == '🪸').length;

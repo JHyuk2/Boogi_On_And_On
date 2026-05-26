@@ -92,7 +92,7 @@ class MockDailyLogRepository implements DailyLogRepository {
       boogiQuote: '지친 날에는 가쁜 숨을 가라앉히고 완전히 이완하기.',
     ),
     DailyLog(
-      date: DateTime(2026, 5, 25), // 시스템 기준 오늘 날짜에 가짜 데이터 바인딩
+      date: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
       mood: '☀️ 맑음',
       completedTasks: ['나는 멋진 사람이다 응원하기', '깊게 숨 들이마시기'],
       grassType: '⭐',

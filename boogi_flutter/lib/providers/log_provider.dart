@@ -9,6 +9,7 @@ final logViewModeProvider = StateProvider<LogViewMode>(
 );
 
 /// 현재 달력의 선택된 연월을 관리하는 Provider
+/// DateTime.now()를 사용하여 앱 실행 시점의 실제 현재 날짜로 초기화
 final focusedMonthProvider = StateProvider<DateTime>(
-  (ref) => DateTime(2026, 5, 25), // 시스템 기본 날짜인 2026년 5월로 초기화
+  (ref) => DateTime.now(),
 );
