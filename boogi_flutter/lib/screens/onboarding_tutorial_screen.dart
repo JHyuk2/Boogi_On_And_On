@@ -121,7 +121,7 @@ class _OnboardingTutorialScreenState
       _currentStep = 3;
     });
     _startDialogue(
-      "그러고 보니... 내가 옛날에 어떤 별에서 온 어린 왕자한테 들은 얘기가 있어.\n\n『이 세상엔 수많은 거북이가 있지만, 네가 나에게 이름을 붙여주고 불러주는 순간... 나는 너에게 지구상에 단 하나뿐인 특별한 거북이가 되는 거야.』 🐢✨\n\n나를 이 바다에서 뭐라고 불러줄래? 네가 지어준 이름으로 불리고 싶어!",
+      "그러고 보니... 내 친구가 어떤 별에서 온 왕자와 나눈 이야기를 들었어!\n\n『이 세상엔 수많은 거북이가 있지만, 네가 나에게 이름을 붙여주고 불러주는 순간... 나는 너에게 지구상에 단 하나뿐인 특별한 거북이가 되는 거야.』 🐢✨\n\n나도 너와 친해지고 특별한 거부기가 되고싶어! 나를 이 바다에서 뭐라고 불러줄래? 네가 지어준 이름으로 불리고 싶어!",
     );
   }
 
@@ -156,8 +156,8 @@ class _OnboardingTutorialScreenState
     });
     // 홈 화면 서약서 텍스트 자동 동기화
     ref.read(onboardingProvider.notifier).setPledgeText(
-      "오직 너만을 위한 $_inputName부기야. 우리 앞으로 이 바다에서 예쁜 추억 많이 만들자. 잘 부탁해!",
-    );
+          "오직 너만을 위한 $_inputName부기야. 우리 앞으로 이 바다에서 예쁜 추억 많이 만들자. 잘 부탁해!",
+        );
 
     _startDialogue(
       "와아...! 눈이 부실 정도로 너무 멋진 이름이야! 감동이야... 주르륵 😭\n\n이제 나는 그냥 거북이가 아니라, 오직 너만을 위한 $_inputName부기야. 우리 앞으로 이 바다에서 예쁜 추억 많이 만들자. 잘 부탁해! 🐳💙",
@@ -259,7 +259,8 @@ class _OnboardingTutorialScreenState
           // ── 3. 메인 콘텐츠 ──
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Column(
                 children: [
                   // 상단 단계 게이지바
@@ -291,7 +292,8 @@ class _OnboardingTutorialScreenState
                                   ],
                                 ),
                               )
-                                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                                  .animate(
+                                      onPlay: (c) => c.repeat(reverse: true))
                                   .scale(
                                     begin: const Offset(0.9, 0.9),
                                     end: const Offset(1.1, 1.1),
@@ -318,7 +320,8 @@ class _OnboardingTutorialScreenState
                                   ),
                                 ),
                               )
-                                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                                  .animate(
+                                      onPlay: (c) => c.repeat(reverse: true))
                                   .slideY(
                                     begin: -0.06,
                                     end: 0.06,
@@ -410,8 +413,13 @@ class _OnboardingTutorialScreenState
                                       fontWeight: FontWeight.bold,
                                     ),
                                   )
-                                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                                      .fade(begin: 0.3, end: 0.9, duration: 800.ms),
+                                      .animate(
+                                          onPlay: (c) =>
+                                              c.repeat(reverse: true))
+                                      .fade(
+                                          begin: 0.3,
+                                          end: 0.9,
+                                          duration: 800.ms),
                                 ),
                             ],
                           ),
