@@ -109,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen> {
                           curve: Curves.easeOutBack),
                   const SizedBox(height: 12.0),
                   const Text(
-                    '각자의 물결을 따라서 On&On',
+                    '가장 작고 다정한 첫걸음',
                     style: TextStyle(
                       fontSize: 15.0,
                       color: Color(0xFF4A7D82),
