@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'home_screen.dart';
+import 'goal_board_screen.dart';
 import 'log_screen.dart';
 import 'community_screen.dart';
 import 'profile_screen.dart';
@@ -55,6 +56,7 @@ class _MainLayoutState extends State<MainLayout> {
         },
         children: const [
           HomeScreen(),
+          GoalBoardScreen(),
           LogScreen(),
           CommunityScreen(),
           ProfileScreen(),
@@ -94,10 +96,11 @@ class _MainLayoutState extends State<MainLayout> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(0, Icons.home_rounded, '나의 바다'),
-            _buildNavItem(1, Icons.calendar_today_rounded, '항해 일지'),
-            _buildNavItem(2, Icons.message_rounded, '고수들의 바다'),
-            _buildNavItem(3, Icons.person_rounded, '여행자 가방'),
+            _buildNavItem(0, Icons.home_rounded, '홈'),
+            _buildNavItem(1, Icons.explore_rounded, '목표'),
+            _buildNavItem(2, Icons.map_outlined, '항해 지도'),
+            _buildNavItem(3, Icons.beach_access_rounded, '나의 해변'),
+            _buildNavItem(4, Icons.backpack_rounded, '여행자 가방'),
           ],
         ),
       ),
@@ -119,7 +122,7 @@ class _MainLayoutState extends State<MainLayout> {
       splashColor: activeColor.withValues(alpha: 0.1),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
         decoration: BoxDecoration(
           color: isSelected
               ? activeColor.withValues(alpha: 0.1)
@@ -136,7 +139,7 @@ class _MainLayoutState extends State<MainLayout> {
               child: Icon(
                 icon,
                 color: isSelected ? activeColor : inactiveColor,
-                size: isSelected ? 24.0 : 22.0,
+                size: isSelected ? 22.0 : 20.0,
               ),
             ),
             const SizedBox(height: 3.0),
@@ -144,7 +147,7 @@ class _MainLayoutState extends State<MainLayout> {
               label,
               style: TextStyle(
                 color: isSelected ? activeColor : inactiveColor,
-                fontSize: 10.5,
+                fontSize: 9.5,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
               ),
             ),
