@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/log_provider.dart';
 import '../models/daily_log_model.dart';
-import '../providers/daily_log_provider.dart';
 import '../providers/home_provider.dart';
+import '../providers/voyage_log_provider.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Mock Data Models & Generators
@@ -728,7 +728,7 @@ class _SeaGrassViewState extends ConsumerState<_SeaGrassView> {
 
   @override
   Widget build(BuildContext context) {
-    final logsAsync = ref.watch(dailyLogProvider);
+    final logsAsync = ref.watch(voyageLogProvider);
     final focusedMonth = ref.watch(focusedMonthProvider);
 
     return logsAsync.when(

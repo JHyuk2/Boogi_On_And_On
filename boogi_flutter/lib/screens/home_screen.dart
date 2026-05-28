@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/onboarding_provider.dart';
 import '../providers/home_provider.dart';
+import '../providers/user_provider.dart';
+import '../providers/voyage_log_provider.dart';
 
 // ─────────────────────────────────────────────────────────────
 // 홈 화면 — Finch 스타일 캐릭터 인터랙션 + 목표 리스트 (Fidelity 리팩토링)
@@ -28,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onboardingState = ref.watch(onboardingProvider);
+    final userState = ref.watch(userProvider);
     final homeState = ref.watch(homeProvider);
     final homeNotifier = ref.read(homeProvider.notifier);
     final moodColor = _getMoodColor(homeState.selectedMood);
@@ -73,13 +75,13 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 8.0),
 
                   // [상단 바] 유저 상태 뱃지 + 리셋 버튼
-                  _buildTopBar(context, ref, onboardingState),
+                  _buildTopBar(context, ref, userState),
                   const SizedBox(height: 20.0),
 
                   // [캐릭터 섹션] 부기 🐢 + 기분 칩 + 인용문
                   _buildCharacterSection(
                     homeState: homeState,
-                    onboardingState: onboardingState,
+                    userState: userState,
                     moodColor: moodColor,
                   ),
                   const SizedBox(height: 24.0),
@@ -91,6 +93,8 @@ class HomeScreen extends ConsumerWidget {
                   // [완료 섹션] 오늘 완료한 일 (기본: 접힘)
                   _buildCollapsibleSection(
                     context: context,
+                    ref: ref,
+                    homeState: homeState,
                     sectionKey: 'completed',
                     title: '오늘 완료한 일',
                     emoji: '✨',
@@ -104,6 +108,8 @@ class HomeScreen extends ConsumerWidget {
                   // [활성 섹션 1] 하루의 시작 (기본: 펼침)
                   _buildCollapsibleSection(
                     context: context,
+                    ref: ref,
+                    homeState: homeState,
                     sectionKey: 'morning',
                     title: '하루의 시작',
                     emoji: '🌅',
@@ -116,6 +122,8 @@ class HomeScreen extends ConsumerWidget {
                   // [활성 섹션 2] 언제든 편한 때! (기본: 펼침)
                   _buildCollapsibleSection(
                     context: context,
+                    ref: ref,
+                    homeState: homeState,
                     sectionKey: 'anytime',
                     title: '언제든 편한 때!',
                     emoji: '🌊',
@@ -213,7 +221,7 @@ class HomeScreen extends ConsumerWidget {
   Widget _buildTopBar(
     BuildContext context,
     WidgetRef ref,
-    OnboardingState onboardingState,
+    UserState userState,
   ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -231,8 +239,8 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const Text('⛵ ', style: TextStyle(fontSize: 12)),
               Text(
-                onboardingState.userStatus.isNotEmpty
-                    ? onboardingState.userStatus
+                userState.userStatus.isNotEmpty
+                    ? userState.userStatus
                     : '포근한 여행자',
                 style: const TextStyle(
                   color: Color(0xFF004D40),
@@ -270,7 +278,7 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildCharacterSection({
     required HomeState homeState,
-    required OnboardingState onboardingState,
+    required UserState userState,
     required Color moodColor,
   }) {
     return Column(
@@ -362,7 +370,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           child: Text(
-            '${onboardingState.turtleName.isNotEmpty ? onboardingState.turtleName : '부기'}부기 🐢',
+            '${userState.nickname.isNotEmpty ? userState.nickname : '부기'} 🐢',
             style: const TextStyle(
               color: Color(0xFF004D40),
               fontSize: 12.0,
@@ -375,8 +383,8 @@ class HomeScreen extends ConsumerWidget {
 
         // 서약 인용문 (담백한 안내 문구)
         Text(
-          onboardingState.pledgeText.isNotEmpty
-              ? '"${onboardingState.pledgeText}"'
+          userState.pledgeText.isNotEmpty
+              ? '"${userState.pledgeText}"'
               : '완벽하지 않아도 괜찮아. 느려도 꾸준히 헤엄치자.',
           textAlign: TextAlign.center,
           style: const TextStyle(
@@ -484,6 +492,8 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildCollapsibleSection({
     required BuildContext context,
+    required WidgetRef ref,
+    required HomeState homeState,
     required String sectionKey,
     required String title,
     required String emoji,
@@ -570,7 +580,7 @@ class HomeScreen extends ConsumerWidget {
                         endIndent: 16,
                         color: const Color(0xFFB2DFDB).withValues(alpha: 0.25),
                       ),
-                    _buildGoalItem(context, goals[i], notifier),
+                    _buildGoalItem(context, ref, goals[i], notifier, homeState),
                   ],
                   const SizedBox(height: 4),
                 ],
@@ -604,8 +614,10 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildGoalItem(
     BuildContext context,
+    WidgetRef ref,
     GoalItem goal,
     HomeNotifier notifier,
+    HomeState homeState,
   ) {
     return InkWell(
       onTap: () {
@@ -613,6 +625,12 @@ class HomeScreen extends ConsumerWidget {
         notifier.toggleGoal(goal.id);
 
         if (willComplete) {
+          // ── [전역 연동] 항해 로그에 오늘 완료 태스크 실시간 저장 ──
+          ref.read(voyageLogProvider.notifier).logCompletedTask(
+            goal.title,
+            homeState.selectedMood ?? '☀️ 맑음',
+          );
+
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -635,6 +653,9 @@ class HomeScreen extends ConsumerWidget {
               duration: const Duration(milliseconds: 1200),
             ),
           );
+        } else {
+          // ── [전역 연동] 항해 로그에서 오늘 완료 태스크 취소 기록 ──
+          ref.read(voyageLogProvider.notifier).logUncompletedTask(goal.title);
         }
       },
       borderRadius: BorderRadius.circular(18.0),

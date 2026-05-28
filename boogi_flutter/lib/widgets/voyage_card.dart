@@ -28,18 +28,17 @@ class VoyageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      width: 140, // ── 카드 가로 140으로 황금비율 약간 확대
       decoration: OceanTheme.cardDecoration(
         color: OceanTheme.cardWarm,
-        radius: 18.0,
+        radius: 14.0, // 모서리 비례 조절
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(14.0),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18.0),
+          borderRadius: BorderRadius.circular(14.0),
           onTap: () {
-            // 추후 상세 화면 이동 연결
             ScaffoldMessenger.of(context).clearSnackBars();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -54,54 +53,63 @@ class VoyageCard extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0), // ── 내부 여백 12로 넓혀 여유 증대
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
-                // ── 상단: 이모지 아이콘 배경 ──
+                // ── 상단: 썸네일 (32x32로 살짝 키움) ──
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: OceanTheme.coral.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14.0),
+                    borderRadius: BorderRadius.circular(10.0),
                   ),
                   child: Center(
                     child: Text(
                       template.emoji,
-                      style: const TextStyle(fontSize: 22),
+                      style: const TextStyle(fontSize: 18),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
 
-                // ── 중간: 제목 (2줄 고정, 말줄임) ──
+                // ── 중간: 제목 (14px, 굵게, 2줄 고정) ──
                 Text(
-                  template.title,
-                  style: OceanTheme.cardTitle,
+                  template.title.replaceAll('\n', ' '),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF004D40),
+                    fontSize: 14.0, // ── 제목 14px로 가독성 강화
+                    fontWeight: FontWeight.bold,
+                    height: 1.3,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
-                // ── 작성자 ──
+                // ── 작성자 (10px, 회색) ──
                 Text(
                   'By: ${template.authorName}',
-                  style: OceanTheme.cardSubtitle.copyWith(
-                    color: OceanTheme.textMuted,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF8BA6A1),
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
 
                 const Spacer(),
 
-                // ── 하단: 좋아요 / 저장 / 조회 통계 ──
-                Row(
+                // ── [에러 원천 차단] Row 대신 Wrap 위젯 도입하여 가로 공간 부족 시 아래 줄로 자동 래핑 ──
+                Wrap(
+                  spacing: 6.0, // 칩 간 가로 마진
+                  runSpacing: 4.0, // 자동 줄바꿈 시 세로 마진
+                  alignment: WrapAlignment.start,
                   children: [
                     _buildStatChip('❤️', _formatCount(template.likeCount)),
-                    const SizedBox(width: 10),
                     _buildStatChip('📌', _formatCount(template.saveCount)),
-                    const SizedBox(width: 10),
                     _buildStatChip('👁️', _formatCount(template.viewCount)),
                   ],
                 ),
@@ -124,19 +132,19 @@ class VoyageCard extends StatelessWidget {
         );
   }
 
-  /// 작은 통계 칩 위젯 (이모지 + 숫자)
+  /// 작은 통계 칩 위젯 (이모지 + 숫자 11px)
   Widget _buildStatChip(String icon, String value) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(icon, style: const TextStyle(fontSize: 10)),
-        const SizedBox(width: 2),
+        Text(icon, style: const TextStyle(fontSize: 9.5)),
+        const SizedBox(width: 2.0),
         Text(
           value,
           style: const TextStyle(
-            color: OceanTheme.textMuted,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w600,
+            color: Color(0xFF8BA6A1),
+            fontSize: 11.0, // ── 11px로 가독성 향상
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
